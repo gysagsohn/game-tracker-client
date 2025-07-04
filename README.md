@@ -26,10 +26,22 @@ game-tracker-client/
 │   ├── styles/         # Tailwind and custom CSS
 │   ├── contexts/       # Global state (e.g., auth)
 │   └── App.jsx         # Main app router
+├── assets/
+│   └── wireframes/     # Wireframe image files
 ├── index.html
 ├── tailwind.config.js
 ├── vite.config.js
 ```
+
+## Wireframes
+| Page        | Preview |
+|-------------|---------|
+| Login       | ![Login Page](assets/wireframes/LoginPage.png) |
+| Signup      | ![Signup Page](assets/wireframes/SignupPage.png) |
+| Dashboard   | ![Dashboard Page](assets/wireframes/DashboardPage.png) |
+| Match Log   | ![Match Log Page](assets/wireframes/MatchLogPage.png) |
+| Profile     | ![Profile Page](assets/wireframes/ProfilePage.png) |
+
 
 ## Getting Started (Local Dev)
 
@@ -55,24 +67,48 @@ VITE_API_URL=http://localhost:3001
 ```
 Make sure this matches the port your backend server is running on.
 
-## Pages & Components
+## Pages & Routes
 
-### Pages
-- /login, /signup
-- /dashboard – show matches, stats
-- /matches/new – record match results
-- /games – explore/add games
-- /friends – manage friend list
-- /profile/:id – user stats (planned)
+| Route           | Description                                      |
+|----------------|--------------------------------------------------|
+| `/login`        | Login form with password reset option            |
+| `/signup`       | Create new account (with social login placeholder) |
+| `/dashboard`    | Welcome, stats, last game, nav buttons           |
+| `/matches/new`  | Log a new game result                            |
+| `/matches`      | Match history + stats                            |
+| `/profile/:id`  | Edit profile, view/add friends (merged with Friends Page) |
 
-### Components
-- Navbar, MobileDrawer
-- GameCard, MatchForm, MatchHistoryList
-- FriendList, PrivateRoute
+---
 
+## Components
+
+- `Navbar`, `MobileDrawer`  
+- `GameCard`, `MatchForm`, `MatchHistoryList`  
+- `FriendList`, `PrivateRoute`
+
+---
+
+## Upcoming Features (Planned)
+
+These are **not yet implemented in the wireframes**, but are planned for development:
+
+- Autocomplete & Search-as-you-type (in Add Friend & Game fields)
+- Custom dropdown UI for game selection
+- Form validation with helpful error messages
+- Image placeholders for avatars and game icons
+- Password strength indicator
+- Responsive drawer menu for navigation
+- Invite friends via link/email
+- Sorting & filtering in match history
+- Pagination or lazy loading for long match/friend lists
+
+## Stretch goals
+- API call to facebook and google to set up account
+- use friend's list or contanct for people to add friends or send invite to them asking to join them
+- linking email and facebook/google login for 1 user
 
 ## Related Repositories
-Backend: game-tracker-server
+- [Backend: game-tracker-server](https://github.com/gysagsohn/game-tracker-server)
 
 ## Author
-Built by Gy Sohn as part of a career change full-stack portfolio project.
+Built by Gy Sohn as part of a full-stack portfolio project during a career transition. Design inspired by Discord's palette & mobile-first UX best practices.
