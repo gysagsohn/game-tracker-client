@@ -79,7 +79,10 @@ export default function SignupPage() {
         email: form.email.trim(),
         password: form.password,
       });
-      nav("/dashboard");
+      
+    nav(`/check-email?email=${encodeURIComponent(form.email.trim())}`, {
+        state: { email: form.email.trim() }, // also pass in state as fallback
+      });
     } catch (err) {
       setFormError(err.message);
     } finally {
