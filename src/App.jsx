@@ -2,11 +2,13 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import AuthedShell from "./components/AuthedShell";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AuthProvider from "./contexts/AuthContext";
+import CheckEmailPage from "./pages/CheckEmail";
 import Dashboard from "./pages/Dashboard";
 import ForgotPasswordPage from "./pages/ForgotPassword";
 import Login from "./pages/Login";
 import ProfilePage from "./pages/Profile";
 import Signup from "./pages/Signup";
+import VerifyEmailPage from "./pages/VerifyEmail";
 
 export default function App() {
   return (

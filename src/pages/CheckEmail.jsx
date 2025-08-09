@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
-import LiveRegion from "../components/a11y/LiveRegion";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import api from "../lib/axios";
@@ -41,7 +40,7 @@ export default function CheckEmailPage() {
   return (
     <div className="min-h-screen bg-default flex items-center justify-center p-6">
       <div className="card shadow-card p-6 bg-card rounded-[var(--radius-standard)] w-full max-w-md text-center">
-        <LiveRegion message={err || ok} />
+        <div aria-live="polite" className="sr-only">{err || ok}</div>
 
         <h1 className="h1 mb-2">Check your email</h1>
         <p className="text-secondary mb-6">
