@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#F5F6FA" />
+  <title>404 — Not Found | Game Tracker</title>
+
+  <!-- Inter font to match app -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-default: #F5F6FA;
+      --bg-card: #FFFFFF;
+      --text-primary: #1E1F22;
+      --text-secondary: #4F545C;
+      --cta: #5865F2;
+      --cta-hover: #4752C4;
+      --border-muted: #D1D5DB;
+      --warning: #ED4245;
+      --success: #57F287;
+
+      --radius: 8px;
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: var(--bg-default);
+      color: var(--text-primary);
+    }
+
+    .wrap {
+      min-height: 100%;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 520px;
+      background: var(--bg-card);
+      border: 1px solid color-mix(in oklab, var(--border-muted) 70%, transparent);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-card);
+      padding: 24px;
+      text-align: center;
+    }
+
+    .logo {
+      display: block;
+      margin: 0 auto 12px;
+      height: 56px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    h1 {
+      font-size: 32px;
+      line-height: 1.2;
+      font-weight: 700;
+      margin: 8px 0 8px;
+    }
+
+    p.lead {
+      color: var(--text-secondary);
+      margin: 0 0 16px;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .tip {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+    }
+
+    .actions {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: 1fr;
+      margin-top: 8px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 20px;
+      border-radius: var(--radius);
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform 0.04s ease, filter 0.12s ease;
+      border: 1px solid transparent;
+    }
+    .btn:active { transform: translateY(1px); }
+
+    .btn-primary {
+      color: #fff;
+      background: var(--cta);
+    }
+    .btn-primary:hover { background: var(--cta-hover); }
+
+    .btn-ghost {
+      color: var(--text-primary);
+      background: #fff;
+      border-color: var(--border-muted);
+    }
+
+    .links {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 14px;
+      font-size: 14px;
+    }
+    .links a {
+      color: var(--cta);
+      text-decoration: underline;
+    }
+
+    @media (min-width: 768px) {
+      .card { padding: 28px; }
+    }
+
+    /* Respect user prefers-reduced-motion */
+    @media (prefers-reduced-motion: reduce) {
+      .btn { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card" role="alert">
+      <!-- Optional logo: place a copy at public/logo.png -->
+      <img class="logo" src="/logo.png" alt="Game Tracker" onerror="this.style.display='none'">
+
+      <h1>404 — Page Not Found</h1>
+      <p class="lead">Oops! We couldn’t find that page.</p>
+      <p class="tip">It may have been moved, or the link might be incorrect.</p>
+
+      <div class="actions">
+        <a href="/dashboard" class="btn btn-primary">Go to Dashboard</a>
+        <a href="/login" class="btn btn-ghost">Back to Login</a>
+      </div>
+
+      <div class="links">
+        <a href="/matches">Matches</a>
+        <a href="/friends">Friends</a>
+        <a href="/profile/me">My Profile</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,3 +1,14 @@
+<p align="center">
+  <a href="https://github.com/gysagsohn/game-tracker-client">
+    <img src="https://img.shields.io/github/stars/gysagsohn/game-tracker-client?style=social" alt="GitHub stars">
+  </a>
+  <a href="https://gy-gametracker.netlify.app">
+    <img src="https://img.shields.io/netlify/54a5c9e5-9595-48c7-a422-221e8a15bc1d?label=Netlify%20Deploy&logo=netlify" alt="Netlify frontend">
+  </a>
+  <img src="https://img.shields.io/badge/status-Live%20(beta)-yellowgreen" alt="App status">
+</p>
+
+
 # Game Tracker Frontend – React + Vite (Mobile First)
 
 This is the frontend client for the Game Tracker project — a full-stack MERN application to track wins, losses, and scores from card/board games.
