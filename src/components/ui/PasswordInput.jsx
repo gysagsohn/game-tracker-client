@@ -7,7 +7,7 @@ export default function PasswordInput({
   name = "password",
   value,
   onChange,
-  placeholder = "••••••••",
+  placeholder="At least 8 chars, incl. letters, numbers & symbol",
   error = "",
   onBlur,
   onKeyDown, // allow parent to listen (for strength, etc.)
