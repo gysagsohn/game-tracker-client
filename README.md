@@ -1,18 +1,18 @@
-# 🎮 Game Tracker Frontend – React + Vite (Mobile First)
+# Game Tracker Frontend – React + Vite (Mobile First)
 
-This is the frontend client for the [Game Tracker](https://github.com/gysagsohn/game-tracker-server) project — a full-stack MERN app to track wins, losses, and scores from card/board games. The frontend is built using React, Vite, and Tailwind CSS, with a mobile-first design philosophy.
+This is the frontend client for the Game Tracker project — a full-stack MERN application to track wins, losses, and scores from card/board games.
+The frontend is built using React, Vite, and Tailwind CSS, following a mobile-first design approach and fully integrated with the backend API.
 
 ---
 
-## ⚙️ Tech Stack
-
-- React (with Vite)
-- Tailwind CSS
-- Axios
-- React Router
-- Context API (planned)
-- LocalStorage / JWT for auth
-
+## Tech Stack
+- React (Vite build tool)
+- Tailwind CSS (custom color palette + design tokens)
+- Axios (API requests)
+- React Router DOM (routing & protected routes)
+- Context API (authentication state)
+- LocalStorage / JWT (persistent auth)
+- Responsive Design (mobile-first with large-screen optimizations)
 ---
 
 ## 📁 Folder Structure
@@ -21,16 +21,21 @@ This is the frontend client for the [Game Tracker](https://github.com/gysagsohn/
 game-tracker-client/
 ├── public/
 ├── src/
-│   ├── components/     # Reusable UI components
-│   ├── pages/          # Route-based pages (Login, Dashboard, etc.)
-│   ├── styles/         # Tailwind and custom CSS
-│   ├── contexts/       # Global state (e.g., auth)
-│   └── App.jsx         # Main app router
-├── assets/
-│   └── wireframes/     # Wireframe image files
-├── index.html
+│   ├── assets/           # Logos, images, wireframes
+│   ├── components/       # Reusable UI components
+│   │   ├── ui/           # Buttons, Inputs, etc.
+│   │   ├── navigation/   # SideNav, MobileNav
+│   │   ├── AuthedShell.jsx
+│   │   └── ProtectedRoute.jsx
+│   ├── contexts/         # AuthContext (login/signup/logout handling)
+│   ├── lib/              # API helper (Axios instance)
+│   ├── pages/            # Login, Signup, ForgotPassword, Dashboard, Profile
+│   ├── styles/           # Tailwind config + custom utilities
+│   ├── App.jsx           # App routes
+│   └── main.jsx
 ├── tailwind.config.js
 ├── vite.config.js
+└── package.json
 ```
 
 ## Wireframes
@@ -42,6 +47,54 @@ game-tracker-client/
 | Match Log   | ![Match Log Page](assets/wireframes/MatchLogPage.png) |
 | Profile     | ![Profile Page](assets/wireframes/ProfilePage.png) |
 
+
+## Features Implemented
+### Authentication
+- Login with email & password
+- Signup with email verification
+- Forgot password with email reset link
+- Client-side validation:
+- Email format check
+- Password rules (no spaces, min 8 chars, must include numbers, letters, and symbols)
+- Inline error messages
+- CapsLock warning on password fields
+- Password strength meter (Signup only)
+- "Show password" toggle for password inputs
+- Disabled submit button + loading state during API calls
+
+### Navigation
+- Mobile bottom nav with icons & active states
+- Desktop side nav (Instagram-style) with:
+- Logo (click to go home)
+- Nav links: Dashboard, Matches, Friends, Profile
+- Logout button fixed at bottom
+- Responsive layout changes:
+- Mobile → bottom nav bar
+- Large screen → full-height side nav
+
+### Dashboard
+- Welcome heading with user's first name
+- Card layout for:
+- Last Game Played
+- Stats Summary
+- Quick Action Buttons
+- Responsive spacing & container width improvements for large screens
+
+### Styling
+- Custom Tailwind theme variables (--color-default, --color-card, etc.)
+- Mobile-first layout, scaling up for desktop
+- Default background applied to all auth pages
+- Centered layouts for Login, Signup, and Forgot Password
+- Spacing & padding adjustments across pages
+
+## Upcoming Features
+- Game list search + autocomplete
+- Custom dropdown UI for game selection
+- Match creation form with friend invites
+- Sorting & filtering in match history
+- Pagination or infinite scroll
+- Friend list management + friend requests
+- Stats page with charts
 
 ## Getting Started (Local Dev)
 
@@ -88,24 +141,6 @@ Make sure this matches the port your backend server is running on.
 
 ---
 
-## Upcoming Features (Planned)
-
-These are **not yet implemented in the wireframes**, but are planned for development:
-
-- Autocomplete & Search-as-you-type (in Add Friend & Game fields)
-- Custom dropdown UI for game selection
-- Form validation with helpful error messages
-- Image placeholders for avatars and game icons
-- Password strength indicator
-- Responsive drawer menu for navigation
-- Invite friends via link/email
-- Sorting & filtering in match history
-- Pagination or lazy loading for long match/friend lists
-
-## Stretch goals
-- API call to facebook and google to set up account
-- use friend's list or contanct for people to add friends or send invite to them asking to join them
-- linking email and facebook/google login for 1 user
 
 ## Related Repositories
 - [Backend: game-tracker-server](https://github.com/gysagsohn/game-tracker-server)
