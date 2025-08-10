@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import GoogleButton from "../components/GoogleButton";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import api from "../lib/axios";
@@ -26,9 +27,15 @@ export default function ForgotPasswordPage() {
     }
   };
 
+  // Detect “Google-only” hint from API response
+  const googleOnly = /google\s*sign[- ]?in/i.test(error);
+
   return (
     <div className="min-h-screen bg-default flex items-center justify-center p-6">
       <div className="card shadow-card p-6 bg-card rounded-[var(--radius-standard)] w-full max-w-md text-center">
+        {/* SR announcement for screen readers */}
+        <div aria-live="polite" className="sr-only">{ok || error}</div>
+
         <h1 className="h1 mb-2">Forgot password</h1>
         <p className="text-secondary mb-6">
           Enter your email and we’ll send you a password reset link.
@@ -45,6 +52,7 @@ export default function ForgotPasswordPage() {
             {ok}
           </div>
         )}
+
         {error && (
           <div
             className="mb-4 rounded-[var(--radius-standard)] border p-3 text-sm"
@@ -58,6 +66,22 @@ export default function ForgotPasswordPage() {
           </div>
         )}
 
+        {/* Extra hint + Google button if this account is Google-only */}
+        {googleOnly && (
+          <div
+            className="mb-4 rounded-[var(--radius-standard)] border p-3 text-sm text-left"
+            style={{
+              borderColor: "#4285F4",
+              background: "color-mix(in oklab, #4285F4 8%, white)",
+            }}
+          >
+            <p className="mb-3 text-primary">
+              This account uses <strong>Google sign-in</strong>. Use the button below to continue.
+            </p>
+            <GoogleButton className="w-full" />
+          </div>
+        )}
+
         <form onSubmit={onSubmit} className="space-y-4">
           <Input
             label="Email"
@@ -68,13 +92,8 @@ export default function ForgotPasswordPage() {
             onChange={(e) => setEmail(e.target.value)}
             required
           />
-          <Button className="w-full" type="submit" disabled={loading}>
-            {loading ? (
-              <span className="inline-flex items-center gap-2">
-                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" opacity=".25"/><path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="4" fill="none"/></svg>
-                Sending…
-              </span>
-            ) : "Send reset link"}
+          <Button className="w-full" type="submit" loading={loading} disabled={loading}>
+            Send reset link
           </Button>
         </form>
 
