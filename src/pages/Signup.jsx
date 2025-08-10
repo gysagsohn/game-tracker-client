@@ -1,6 +1,7 @@
 // src/pages/Signup.jsx
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import GoogleButton from "../components/GoogleButton";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import PasswordInput from "../components/ui/PasswordInput";
@@ -197,6 +198,17 @@ export default function SignupPage() {
               "Create account"
             )}
           </Button>
+
+          {/* Divider */}
+          <div className="flex items-center my-4">
+            <div className="flex-grow border-t border-[--color-border-muted]" />
+            <span className="px-2 text-secondary text-sm">or</span>
+            <div className="flex-grow border-t border-[--color-border-muted]" />
+          </div>
+
+          {/* Google Sign-in */}
+          <GoogleButton className="w-full" />
+
         </form>
 
         <p className="text-center text-sm mt-4">

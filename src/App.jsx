@@ -6,6 +6,7 @@ import CheckEmailPage from "./pages/CheckEmail";
 import Dashboard from "./pages/Dashboard";
 import ForgotPasswordPage from "./pages/ForgotPassword";
 import Login from "./pages/Login";
+import OAuthSuccess from "./pages/OAuthSuccess";
 import ProfilePage from "./pages/Profile";
 import Signup from "./pages/Signup";
 import VerifyEmailPage from "./pages/VerifyEmail";
@@ -18,6 +19,7 @@ export default function App() {
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/oauth-success" element={<OAuthSuccess />} />
           <Route path="/verify-email" element={<VerifyEmailPage />} />
           <Route path="/check-email" element={<CheckEmailPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />

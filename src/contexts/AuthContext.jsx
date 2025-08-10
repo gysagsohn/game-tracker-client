@@ -1,74 +1,80 @@
+// src/contexts/AuthContext.jsx
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import api from "../lib/axios";
-
-const AuthContext = createContext(null);
-export const useAuth = () => useContext(AuthContext);
+const AuthCtx = createContext(null);
+export const useAuth = () => useContext(AuthCtx);
 
 export default function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
   const [token, setToken] = useState(() => localStorage.getItem("token"));
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Bootstrap session if token exists
+  // hydrate user from token
   useEffect(() => {
-    async function bootstrap() {
+    let ignore = false;
+    async function run() {
       try {
-        if (token) {
-          // ensure axios carries the token for this session
-          api.defaults.headers.Authorization = `Bearer ${token}`;
-          const res = await api.get("/users/me");
-          setUser(res.data?.data || res.data);
-        } else {
-          delete api.defaults.headers.Authorization;
+        setLoading(true);
+        if (!token) {
+          setUser(null);
+          return;
         }
-      } catch (e) {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error("Session expired. Please sign in again.");
+        const json = await res.json();
+        if (!ignore) setUser(json?.data || json?.user || null);
+      } catch {
         localStorage.removeItem("token");
-        setToken(null);
-        setUser(null);
+        if (!ignore) {
+          setToken(null);
+          setUser(null);
+        }
       } finally {
-        setLoading(false);
+        if (!ignore) setLoading(false);
       }
     }
-    bootstrap();
+    run();
+    return () => { ignore = true; };
   }, [token]);
 
-  // Login with JSON body
-  const login = async (email, password) => {
-    const res = await api.post("/auth/login", { email, password });
-    const payload = res.data?.data || res.data;
-    const t = payload?.token;
-    if (t) {
-      localStorage.setItem("token", t);
-      setToken(t);
-      api.defaults.headers.Authorization = `Bearer ${t}`;
-    }
-    if (payload?.user) setUser(payload.user);
-    return payload;
-  };
-
-  // Signup expects a single object { firstName, lastName, email, password }
-  const signup = async ({ firstName, lastName, email, password }) => {
-    const res = await api.post("/auth/signup", {
-      firstName,
-      lastName,
-      email,
-      password,
+  // email+password login
+  const login = useCallback(async (email, password) => {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
     });
-    return res.data?.data || res.data;
-  };
+    const json = await res.json();
+    if (!res.ok) throw new Error(json?.message || "Login failed");
+    localStorage.setItem("token", json.token);
+    setToken(json.token);
+    setUser(json.user);
+  }, []);
 
-  const logout = () => {
+  // signup (returns 201 and sends verify email; you’ll route to /check-email)
+  const signup = useCallback(async (payload) => {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/signup`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json?.message || "Signup failed");
+    // server currently returns token + user; we don't auto-login until email is verified
+    return json;
+  }, []);
+
+  const logout = useCallback(() => {
     localStorage.removeItem("token");
     setToken(null);
     setUser(null);
-    delete api.defaults.headers.Authorization;
-  };
+  }, []);
 
-  const value = useMemo(
-    () => ({ user, token, loading, login, signup, logout }),
-    [user, token, loading]
+  return (
+    <AuthCtx.Provider value={{ token, user, loading, login, signup, logout }}>
+      {children}
+    </AuthCtx.Provider>
   );
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

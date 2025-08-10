@@ -2,12 +2,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
+import GoogleButton from "../components/GoogleButton";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import PasswordInput from "../components/ui/PasswordInput";
 import { useAuth } from "../contexts/AuthContext";
 import { isEmail, validatePasswordLogin } from "../utils/validators";
-
 
 export default function LoginPage() {
   const nav = useNavigate();
@@ -49,6 +49,7 @@ export default function LoginPage() {
     }
   };
 
+  // Option A: compute once, then USE it on the button
   const submitDisabled = loading || !!errors.email || !!errors.password;
 
   return (
@@ -61,7 +62,9 @@ export default function LoginPage() {
 
           <div className="card shadow-card p-6 bg-card rounded-[var(--radius-standard)] w-full max-w-md justify-self-center lg:justify-self-auto text-center">
             {/* ARIA live region announces form-level errors to screen readers */}
-            <div aria-live="polite" className="sr-only">{formError || errors.email || errors.password}</div>
+            <div aria-live="polite" className="sr-only">
+              {formError || errors.email || errors.password}
+            </div>
 
             <h1 className="mb-1 h1">Welcome back</h1>
             <p className="mb-6 text-secondary">Log in to track your games</p>
@@ -90,7 +93,11 @@ export default function LoginPage() {
                 autoComplete="email"
                 required
               />
-              {errors.email && <p className="text-sm mt-1" style={{ color: "var(--color-warning)" }}>{errors.email}</p>}
+              {errors.email && (
+                <p className="text-sm mt-1" style={{ color: "var(--color-warning)" }}>
+                  {errors.email}
+                </p>
+              )}
 
               <PasswordInput
                 name="password"
@@ -100,13 +107,13 @@ export default function LoginPage() {
                 autoComplete="current-password"
               />
 
-              <Button type="submit" disabled={submitDisabled} className="w-full">
-                {loading ? (
-                  <span className="inline-flex items-center gap-2">
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" opacity=".25"/><path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="4" fill="none"/></svg>
-                    Signing in…
-                  </span>
-                ) : "Sign in"}
+              <Button
+                type="submit"
+                className="w-full"
+                loading={loading}
+                disabled={submitDisabled} // <-- using it here fixes the ESLint warning
+              >
+                Sign in
               </Button>
 
               <div className="text-center">
@@ -114,6 +121,16 @@ export default function LoginPage() {
                   Forgot password?
                 </Link>
               </div>
+
+
+              <div className="flex items-center my-4">
+                <div className="flex-grow border-t border-[--color-border-muted]" />
+                <span className="px-2 text-secondary text-sm">or</span>
+                <div className="flex-grow border-t border-[--color-border-muted]" />
+              </div>
+
+              {/* Google Sign-in */}
+              <GoogleButton className="w-full" />
             </form>
 
             <p className="mt-4 text-center text-sm">

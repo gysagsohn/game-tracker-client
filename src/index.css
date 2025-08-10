@@ -112,4 +112,7 @@
   .shadow-card { box-shadow: var(--shadow-card); }
   .shadow-modal { box-shadow: var(--shadow-modal); }
   .shadow-tooltip { box-shadow: var(--shadow-tooltip); }
+
+  .card { background: var(--color-card); border: 1px solid color-mix(in oklab, var(--color-border-muted) 60%, transparent); border-radius: var(--radius-standard); }
+
 }
