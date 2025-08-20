@@ -1,8 +1,6 @@
-// src/contexts/AuthContext.jsx
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
-
-const AuthCtx = createContext(null);
-export const useAuth = () => useContext(AuthCtx);
+// src/contexts/AuthProvider.jsx
+import { useCallback, useEffect, useState } from "react";
+import { AuthContext } from "./AuthContextBase";
 
 export default function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem("token"));
@@ -53,7 +51,7 @@ export default function AuthProvider({ children }) {
     setUser(json.user);
   }, []);
 
-  // signup (returns 201 and sends verify email; you’ll route to /check-email)
+  // signup (don’t auto-login; you redirect to /check-email)
   const signup = useCallback(async (payload) => {
     const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/signup`, {
       method: "POST",
@@ -62,7 +60,6 @@ export default function AuthProvider({ children }) {
     });
     const json = await res.json();
     if (!res.ok) throw new Error(json?.message || "Signup failed");
-    // server currently returns token + user; we don't auto-login until email is verified
     return json;
   }, []);
 
@@ -73,8 +70,8 @@ export default function AuthProvider({ children }) {
   }, []);
 
   return (
-    <AuthCtx.Provider value={{ token, user, loading, login, signup, logout }}>
+    <AuthContext.Provider value={{ token, user, loading, login, signup, logout }}>
       {children}
-    </AuthCtx.Provider>
+    </AuthContext.Provider>
   );
 }

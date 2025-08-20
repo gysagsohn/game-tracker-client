@@ -6,7 +6,7 @@ import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import PasswordInput from "../components/ui/PasswordInput";
 import PasswordStrength from "../components/ui/PasswordStrength";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/useAuth";
 import { isEmail, passwordStrength, validatePasswordStrict } from "../utils/validators";
 
 export default function SignupPage() {

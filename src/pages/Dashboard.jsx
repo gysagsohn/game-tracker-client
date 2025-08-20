@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import ActionButtons from "../components/dashboard/ActionButtons";
 import LastGameCard from "../components/dashboard/LastGameCard";
 import StatsCard from "../components/dashboard/StatsCard";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/useAuth";
 import api from "../lib/axios";
 
 export default function Dashboard() {
