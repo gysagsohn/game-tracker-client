@@ -8,4 +8,16 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
     react()],
+    server: {
+    port: 5173,
+    strictPort: true,
+    proxy: {
+      "/api": {
+        target: "https://game-tracker-server-zq2k.onrender.com",
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/api/, ""),
+      },
+    },
+  },
 })

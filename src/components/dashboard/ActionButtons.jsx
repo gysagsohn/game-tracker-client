@@ -7,7 +7,7 @@ export default function ActionButtons() {
   return (
     <div className="mt-4 grid gap-3 sm:max-w-md sm:mx-auto md:max-w-none md:grid-cols-3">
       <button className={base} onClick={() => nav("/matches/new")}>
-        Add New Game
+        Add New Match
       </button>
       <button className={base} onClick={() => nav("/friends")}>
         Friends List

@@ -1,9 +1,8 @@
-// src/pages/Matches.jsx
+
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
-import { useToast } from "../contexts/toastContext";
 import { useAuth } from "../contexts/useAuth";
 import api from "../lib/axios";
 
@@ -14,9 +13,21 @@ function idOf(v) {
   return null;
 }
 
+function badgeClassForResult(r) {
+  switch (r) {
+    case "Win":
+      return "bg-[color-mix(in_oklab,var(--color-success)_18%,white)]";
+    case "Loss":
+      return "bg-[color-mix(in_oklab,var(--color-warning)_18%,white)]";
+    case "Draw":
+      return "bg-[color-mix(in_oklab,var(--color-border-muted)_40%,white)]";
+    default:
+      return "";
+  }
+}
+
 export default function MatchesPage() {
   const { user } = useAuth();
-  const { toast } = useToast();
   const myId = user?._id ? String(user._id) : null;
 
   const [loading, setLoading] = useState(true);
@@ -25,6 +36,7 @@ export default function MatchesPage() {
   const [filters, setFilters] = useState({ result: "all", q: "" });
   const [confirmingId, setConfirmingId] = useState(null);
   const [remindingId, setRemindingId] = useState(null);
+  const [remindMsg, setRemindMsg] = useState("");
 
   // Load my sessions
   useEffect(() => {
@@ -37,17 +49,14 @@ export default function MatchesPage() {
         const payload = res.data?.data || res.data || [];
         if (!ignore) setMatches(Array.isArray(payload) ? payload : []);
       } catch (e) {
-        if (!ignore) {
-          setError(e.message || "Failed to load matches.");
-          toast.error(e.message || "Failed to load matches.");
-        }
+        if (!ignore) setError(e.message || "Failed to load matches.");
       } finally {
         if (!ignore) setLoading(false);
       }
     }
     load();
     return () => { ignore = true; };
-  }, [toast]);
+  }, []);
 
   // Derived list with filters
   const list = useMemo(() => {
@@ -74,7 +83,6 @@ export default function MatchesPage() {
     try {
       setConfirmingId(matchId);
       await api.post(`/sessions/${matchId}/confirm`);
-      // optimistic update
       setMatches((prev) =>
         prev.map((m) => {
           if (m._id !== matchId) return m;
@@ -87,9 +95,8 @@ export default function MatchesPage() {
           return { ...m, players, matchStatus: allConfirmed ? "Confirmed" : "Pending" };
         })
       );
-      toast.success("Confirmed. Thanks!");
     } catch (e) {
-      toast.error(e.message || "Failed to confirm match.");
+      setError(e.message || "Failed to confirm match.");
     } finally {
       setConfirmingId(null);
     }
@@ -97,14 +104,15 @@ export default function MatchesPage() {
 
   const remindPlayers = async (matchId) => {
     try {
+      setRemindMsg("");
       setRemindingId(matchId);
       const res = await api.post(`/sessions/${matchId}/remind`);
       const count =
         res?.data?.data?.count ??
         (res?.data?.message?.toLowerCase().includes("sent") ? "some" : 0);
-      toast.success(`Reminder sent to ${count} unconfirmed player(s).`);
+      setRemindMsg(`Reminder sent to ${count} unconfirmed player(s).`);
     } catch (e) {
-      toast.error(e.message || "Failed to send reminders.");
+      setError(e.message || "Failed to send reminders.");
     } finally {
       setRemindingId(null);
     }
@@ -112,7 +120,13 @@ export default function MatchesPage() {
 
   return (
     <main className="py-2 lg:py-6">
-      <h1 className="h1 text-center mb-6 lg:mb-10">Match History</h1>
+      {/* Header with "+ New Match" button */}
+      <div className="flex items-center justify-between max-w-3xl mx-auto mb-6 lg:mb-10 px-1">
+        <h1 className="h1">Match History</h1>
+        <Link to="/matches/new" className="btn btn-primary btn-sm md:btn">
+          + New Match
+        </Link>
+      </div>
 
       {/* Filters */}
       <div className="mb-4 grid grid-cols-2 gap-3 sm:max-w-md sm:mx-auto md:max-w-lg">
@@ -134,6 +148,31 @@ export default function MatchesPage() {
         </select>
       </div>
 
+      {/* Errors / success */}
+      {error && (
+        <div
+          className="mb-4 rounded-[var(--radius-standard)] border p-3 text-sm mx-auto max-w-lg"
+          style={{
+            borderColor: "color-mix(in oklab, var(--color-warning) 40%, transparent)",
+            background: "color-mix(in oklab, var(--color-warning) 10%, white)",
+            color: "var(--color-warning)",
+          }}
+        >
+          {error}
+        </div>
+      )}
+      {remindMsg && (
+        <div
+          className="mb-4 rounded-[var(--radius-standard)] border p-3 text-sm mx-auto max-w-lg"
+          style={{
+            borderColor: "color-mix(in oklab, var(--color-success) 40%, transparent)",
+            background: "color-mix(in oklab, var(--color-success) 10%, white)",
+          }}
+        >
+          {remindMsg}
+        </div>
+      )}
+
       {/* Content */}
       {loading ? (
         <div className="grid gap-3 max-w-3xl mx-auto">
@@ -144,13 +183,6 @@ export default function MatchesPage() {
             </Card>
           ))}
         </div>
-      ) : error ? (
-        <Card className="p-6 text-center max-w-2xl mx-auto">
-          <p className="text-secondary mb-3">{error}</p>
-          <Button className="btn-sm" onClick={() => window.location.reload()}>
-            Try again
-          </Button>
-        </Card>
       ) : list.length === 0 ? (
         <Card className="p-6 text-center max-w-2xl mx-auto">
           <p className="text-secondary">
@@ -165,6 +197,8 @@ export default function MatchesPage() {
         <div className="grid gap-3 max-w-3xl mx-auto">
           {list.map((m) => {
             const createdBy = String(idOf(m.createdBy));
+            const amCreator = myId && createdBy === myId;
+
             const me =
               (m?.players || []).find((p) => String(idOf(p.user)) === myId) ||
               (m?.players || [])[0] ||
@@ -176,12 +210,20 @@ export default function MatchesPage() {
               (p) => p.user && String(idOf(p.user)) !== myId && !p.confirmed
             );
             const canRemind =
-              m.matchStatus === "Pending" && myId && createdBy === myId && hasUnconfirmedOthers;
+              m.matchStatus === "Pending" && amCreator && hasUnconfirmedOthers;
+
+            const myBadge = myResult !== "—"
+              ? (
+                  <span className={`px-2 py-0.5 rounded text-xs ${badgeClassForResult(myResult)}`}>
+                    {myResult}
+                  </span>
+                )
+              : <span>—</span>;
 
             return (
               <Card key={m._id} className="p-4">
-                {/* Top row: game + date */}
-                <div className="flex items-baseline justify-between">
+                {/* Top row: game + date + quick nav */}
+                <div className="flex items-baseline justify-between gap-2">
                   <h3 className="font-semibold text-sm">
                     <Link
                       to={`/matches/${m._id}`}
@@ -210,24 +252,34 @@ export default function MatchesPage() {
                   </span>
 
                   <span className="ml-3 font-medium">Your result:</span>
-                  <span>{myResult}</span>
+                  {myBadge}
                 </div>
 
-                {/* Players */}
+                {/* Players (tiny guest hints) */}
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {(m.players || []).map((p, idx) => (
-                    <span
-                      key={`${String(idOf(p.user)) || "guest"}-${idx}`}
-                      className="inline-flex items-center gap-1 rounded-full border border-[--color-border-muted] px-2 py-0.5 text-xs"
-                    >
-                      <span>{p.name || "Player"}</span>
-                      {p.confirmed ? (
-                        <span title="Confirmed" aria-label="Confirmed">✔︎</span>
-                      ) : (
-                        <span title="Pending" aria-label="Pending">⧗</span>
-                      )}
-                    </span>
-                  ))}
+                  {(m.players || []).map((p, idx) => {
+                    const isGuest = !p.user;
+                    const guestIcon = amCreator ? "✎" : "🔒"; // creator can edit, others read-only
+                    return (
+                      <span
+                        key={`${String(idOf(p.user)) || "guest"}-${idx}`}
+                        className="inline-flex items-center gap-1 rounded-full border border-[--color-border-muted] px-2 py-0.5 text-xs"
+                        title={isGuest ? (amCreator ? "Guest • you can edit this player" : "Guest • read-only") : ""}
+                      >
+                        <span>{p.name || "Player"}</span>
+                        {isGuest && (
+                          <span className="ml-1 px-1 rounded bg-[color-mix(in_oklab,var(--color-border-muted)_35%,white)]">
+                            Guest {guestIcon}
+                          </span>
+                        )}
+                        {p.confirmed ? (
+                          <span title="Confirmed" aria-label="Confirmed">✔︎</span>
+                        ) : (
+                          <span title="Pending" aria-label="Pending">⧗</span>
+                        )}
+                      </span>
+                    );
+                  })}
                 </div>
 
                 {/* Notes */}
@@ -244,6 +296,7 @@ export default function MatchesPage() {
                       {confirmingId === m._id ? "Confirming…" : "Confirm I'm in"}
                     </Button>
                   )}
+
                   {canRemind && (
                     <Button
                       className="btn-sm"
