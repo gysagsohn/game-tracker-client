@@ -4,8 +4,8 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import ActivityLog from "../components/matches/ActivityLog";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
-import { useToast } from "../contexts/ToastProvider";
 import { useAuth } from "../contexts/useAuth";
+import { useToast } from "../contexts/useToast";
 import api from "../lib/axios";
 
 function idOf(v) {

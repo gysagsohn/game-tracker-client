@@ -1,4 +1,4 @@
-// src/contexts/ToastProvider.jsx
+
 import { useCallback, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { FaCheckCircle, FaExclamationTriangle, FaInfoCircle, FaTimes } from "react-icons/fa";
@@ -27,8 +27,9 @@ export default function ToastProvider({ children }) {
     ({ type = "info", title, message, duration, sticky = false }) => {
       const id = nextId();
       const toast = { id, type, title, message, createdAt: Date.now() };
-      setToasts((ts) => [toast, ...ts].slice(0, 6));
+      setToasts((ts) => [toast, ...ts].slice(0, 6)); // keep up to 6
 
+      // auto-dismiss unless sticky or duration === 0
       const ms =
         typeof duration === "number"
           ? duration
