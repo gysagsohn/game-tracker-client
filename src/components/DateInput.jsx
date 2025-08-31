@@ -1,4 +1,3 @@
-// src/components/forms/DateInput.jsx
 import { useEffect, useId, useMemo, useState } from "react";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
@@ -9,15 +8,29 @@ function toStartOfDay(d) {
   return x;
 }
 
-export default function DateInput({ label = "Date", value, onChange, required }) {
+/**
+ * Props:
+ * - value: Date | string | null
+ * - onChange: (Date) => void
+ * - label?: string
+ * - required?: boolean
+ * - className?: string  // e.g. "inline-block w-auto"
+ */
+export default function DateInput({
+  label = "Date",
+  value,
+  onChange,
+  required,
+  className = "",
+}) {
   const [open, setOpen] = useState(false);
   const inputId = useId();
 
-  // default to today (start of day)
-  const selected = useMemo(
-    () => (value ? new Date(value) : toStartOfDay(new Date())),
-    [value]
-  );
+  const selected = useMemo(() => {
+    if (!value) return toStartOfDay(new Date());
+    const d = value instanceof Date ? value : new Date(value);
+    return toStartOfDay(d);
+  }, [value]);
 
   useEffect(() => {
     if (!value && onChange) onChange(toStartOfDay(new Date()));
@@ -28,18 +41,18 @@ export default function DateInput({ label = "Date", value, onChange, required })
     <div className="relative">
       <label htmlFor={inputId} className="block text-sm font-medium mb-1">
         {label}
-        {required ? <span className="text-[--color-warning]"> *</span> : null}
+        {required ? <span className="text-[var(--color-warning)]"> *</span> : null}
       </label>
 
-      {/* Looks like an input; no calendar icon */}
+      {/* Inline button so the “box” hugs the date text */}
       <button
         id={inputId}
         type="button"
-        className="input w-full text-left"
+        className={`input inline-block w-auto min-w-[9.5rem] ${className}`}
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="dialog"
-        aria-required={required || undefined}  // <- uses the prop to silence ESLint
+        aria-required={required || undefined}
       >
         {selected.toLocaleDateString()}
       </button>
@@ -48,23 +61,19 @@ export default function DateInput({ label = "Date", value, onChange, required })
         <div
           role="dialog"
           aria-label="Choose a date"
-          className="
-            absolute z-50 mt-2 bg-white rounded-xl shadow-card border p-2
-            w-[18rem] max-w-[calc(100vw-2rem)] right-0
-          "
+          className="absolute z-50 mt-2 bg-white rounded-xl shadow-card border p-2 min-w-[18rem] w-auto right-0"
         >
           <DayPicker
             mode="single"
             selected={selected}
             onSelect={(d) => {
               if (!d) return;
-              const start = toStartOfDay(d);
-              onChange?.(start);
+              onChange?.(toStartOfDay(d));
               setOpen(false);
             }}
             weekStartsOn={1}
             captionLayout="dropdown-buttons"
-            className="rdp-compact"
+            className="rdp-compact"   // uses your compact CSS
           />
         </div>
       )}

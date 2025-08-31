@@ -1,4 +1,3 @@
-// src/pages/NewMatch.jsx
 import { formatISO } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -26,9 +25,9 @@ export default function NewMatchPage() {
   const nav = useNavigate();
   const location = useLocation();
 
-  // Game & date (date is a Date object)
+  // Game & date (store Date object)
   const [game, setGame] = useState(null);
-  const [date, setDate] = useState(null);
+  const [date, setDate] = useState(() => new Date());
   const [notes, setNotes] = useState("");
 
   // Friends (for “Add friend”)
@@ -271,9 +270,9 @@ export default function NewMatchPage() {
             </div>
           </div>
 
-          {/* Date (calendar) */}
+          {/* Date (inline box, compact calendar) */}
           <div className="max-w-xs">
-            <DateInput value={date} onChange={setDate} />
+            <DateInput label="Date" value={date} onChange={setDate} required />
           </div>
 
           {/* Players table */}

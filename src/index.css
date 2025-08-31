@@ -119,10 +119,12 @@
 
 /*  React Day Picker compact styles (*/
 @layer utilities {
+  /* Compact + readable DayPicker */
   .rdp-compact {
-    --rdp-cell-size: 32px;            /* smaller cells */
+    --rdp-cell-size: 34px;                  /* ensures all days fit nicely */
     --rdp-accent-color: var(--color-cta);
     --rdp-background-color: #fff;
+    font-size: 0.95rem;                     /* slight downscale for tighter fit */
   }
 
   .rdp-compact .rdp-months { padding: 0.25rem; }
@@ -131,12 +133,9 @@
     padding: 0.25rem 0.5rem;
     font-size: 0.9rem;
   }
-
-  /* Make the grid a touch tighter */
   .rdp-compact .rdp-table { margin: 0; }
   .rdp-compact .rdp-head_cell,
-  .rdp-compact .rdp-cell {
-    padding: 0.125rem;
-  }
+  .rdp-compact .rdp-cell { padding: 0.125rem; }
 }
+
 

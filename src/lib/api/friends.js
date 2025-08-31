@@ -5,3 +5,8 @@ export async function respondFriendRequest(senderId, action /* "Accepted" | "Rej
   const { data } = await api.post('/friends/respond', { senderId, action });
   return data; // { message, data: { friendId, status } }
 }
+
+export async function fetchPendingFriendRequests() {
+  const { data } = await api.get('/friends/requests');
+  return data;
+}
