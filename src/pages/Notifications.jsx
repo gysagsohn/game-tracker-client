@@ -1,7 +1,7 @@
 // src/pages/Notifications.jsx
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useToast } from '../contexts/ToastProvider';
+import { useToast } from '../contexts/useToast';
 import {
     fetchNotifications,
     markAllNotificationsRead,

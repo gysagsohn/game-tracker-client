@@ -65,7 +65,7 @@ import { fetchNotifications } from "../../lib/api/notifications";
             }
           >
             <span className="inline-flex items-center gap-2">
-              <span role="img" aria-hidden="true">🔔</span> Notifications
+            Notifications
             </span>
             {unread > 0 && (
               <span
