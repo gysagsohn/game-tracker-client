@@ -4,14 +4,17 @@ import AuthedShell from "./components/AuthedShell";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AuthProvider from "./contexts/AuthProvider";
 import ToastProvider from "./contexts/ToastProvider";
+import AddGamePage from "./pages/AddGame";
 import CheckEmailPage from "./pages/CheckEmail";
 import Dashboard from "./pages/Dashboard";
 import ForgotPasswordPage from "./pages/ForgotPassword";
+import FriendRequestsPage from "./pages/FriendRequests";
 import FriendsPage from "./pages/Friends";
 import Login from "./pages/Login";
 import MatchDetail from "./pages/MatchDetail";
 import MatchesPage from "./pages/Matches";
 import NewMatchPage from "./pages/NewMatch";
+import NotificationsPage from "./pages/Notifications";
 import OAuthSuccess from "./pages/OAuthSuccess";
 import ProfilePage from "./pages/Profile";
 import Signup from "./pages/Signup";
@@ -31,6 +34,7 @@ export default function App() {
             <Route path="/verify-email" element={<VerifyEmailPage />} />
             <Route path="/check-email" element={<CheckEmailPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
 
             {/* Private */}
             <Route element={<ProtectedRoute />}>
@@ -39,7 +43,9 @@ export default function App() {
                 <Route path="/matches" element={<MatchesPage />} />
                 <Route path="/matches/:id" element={<MatchDetail />} />
                 <Route path="/matches/new" element={<NewMatchPage />} />
+                <Route path="/games/new" element={<AddGamePage />} />
                 <Route path="/friends" element={<FriendsPage />} />   
+                <Route path="/friends/requests" element={<FriendRequestsPage />} />
                 <Route path="/profile/me" element={<ProfilePage />} />
                 {/* TODO: /matches/new, /matches, /profile/:id */}
               </Route>
