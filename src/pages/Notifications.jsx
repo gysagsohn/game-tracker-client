@@ -4,9 +4,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useToast } from '../contexts/useToast.js';
 import { respondFriendRequest } from '../lib/api/friends.js';
 import {
-    fetchNotifications,
-    markAllNotificationsRead,
-    markNotificationRead,
+  fetchNotifications,
+  markAllNotificationsRead,
+  markNotificationRead,
 } from '../lib/api/notifications.js';
 import { confirmSession, declineSession } from '../lib/api/sessions.js';
 
@@ -43,8 +43,9 @@ function resolveLink(n) {
   if (n?.link) return n.link;
   switch (n?.type) {
     case 'FRIEND_REQUEST':
-      return '/friends/requests';
+      return '/friends?tab=requests';
     case 'FRIEND_ACCEPTED':
+    case 'FRIEND_ACCEPT':
       return '/friends';
     case 'MATCH_INVITE':
     case 'MATCH_REMINDER':
@@ -63,7 +64,7 @@ export default function NotificationsPage() {
   const [meta, setMeta] = useState({ page: 1, limit: 20, total: 0, unreadCount: 0 });
   const [loading, setLoading] = useState(true);
   const [markingAll, setMarkingAll] = useState(false);
-  const [busy, setBusy] = useState({}); // per-item action spinner
+  const [busy, setBusy] = useState({});
   const [params, setParams] = useSearchParams();
   const status = (params.get('status') || 'unread').toLowerCase();
   const page = parseInt(params.get('page') || '1', 10);
@@ -133,7 +134,7 @@ export default function NotificationsPage() {
     }
   }
 
-async function onDeclineMatch(n) {
+  async function onDeclineMatch(n) {
     if (!n.sessionId) return;
     setBusy((b) => ({ ...b, [n._id]: true }));
     try {
@@ -226,14 +227,14 @@ async function onDeclineMatch(n) {
                 ? `${n.sender.firstName}${n.sender.lastName ? ' ' + n.sender.lastName : ''}`
                 : undefined;
 
-
             const prettyType = (n?.type || 'Notification').replace(/_/g, ' ').trim();
             let title = n.title || prettyType;
             let description = n.description || undefined;
+
             if (!n.title) {
               switch (n?.type) {
                 case 'FRIEND_REQUEST':
-                  title = `${senderName || 'Someone'} sent you a friend request`;
+                  title = `Friend request from ${senderName || 'someone'}`;
                   break;
                 case 'FRIEND_ACCEPTED':
                 case 'FRIEND_ACCEPT':
@@ -320,7 +321,10 @@ async function onDeclineMatch(n) {
                       )}
 
                     {isLink && (
-                      <button onClick={() => navigate(link)} className="btn bg-white border border-[var(--color-border-muted)]">
+                      <button
+                        onClick={() => navigate(link)}
+                        className="btn bg-white border border-[var(--color-border-muted)]"
+                      >
                         Open
                       </button>
                     )}

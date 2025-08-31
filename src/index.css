@@ -118,24 +118,16 @@
 }
 
 /*  React Day Picker compact styles (*/
-@layer utilities {
-  /* Compact + readable DayPicker */
-  .rdp-compact {
-    --rdp-cell-size: 34px;                  /* ensures all days fit nicely */
+@layer components {
+  .rdp-compact .rdp {
+    --rdp-cell-size: 36px;
     --rdp-accent-color: var(--color-cta);
-    --rdp-background-color: #fff;
-    font-size: 0.95rem;                     /* slight downscale for tighter fit */
+    --rdp-background-color: color-mix(in oklab, var(--color-cta) 10%, white);
   }
-
-  .rdp-compact .rdp-months { padding: 0.25rem; }
-  .rdp-compact .rdp-caption_dropdowns { gap: 0.25rem; }
-  .rdp-compact .rdp-caption select {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.9rem;
-  }
-  .rdp-compact .rdp-table { margin: 0; }
-  .rdp-compact .rdp-head_cell,
-  .rdp-compact .rdp-cell { padding: 0.125rem; }
+  .rdp-compact .rdp-months { justify-content: center; }
+  .rdp-compact .rdp-caption { padding: 6px 8px; }
+  .rdp-compact .rdp-head_cell { padding: 4px 0; font-size: 12px; }
+  .rdp-compact .rdp-dropdown { max-width: 7rem; } 
 }
 
 

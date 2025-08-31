@@ -59,22 +59,22 @@ export default function DateInput({
 
       {open && (
         <div
-          role="dialog"
-          aria-label="Choose a date"
-          className="absolute z-50 mt-2 bg-white rounded-xl shadow-card border p-2 min-w-[18rem] w-auto right-0"
+        role="dialog"
+        aria-label="Choose a date"
+        className="absolute z-50 top-full left-0 mt-2 bg-white rounded-xl shadow-card border p-2 min-w-[20rem] w-auto overflow-hidden"
         >
-          <DayPicker
+        <DayPicker
             mode="single"
             selected={selected}
             onSelect={(d) => {
-              if (!d) return;
-              onChange?.(toStartOfDay(d));
-              setOpen(false);
+            if (!d) return;
+            onChange?.(toStartOfDay(d));
+            setOpen(false);
             }}
             weekStartsOn={1}
             captionLayout="dropdown-buttons"
-            className="rdp-compact"   // uses your compact CSS
-          />
+            className="rdp-compact"
+        />
         </div>
       )}
     </div>
