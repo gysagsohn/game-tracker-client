@@ -1,12 +1,14 @@
 // src/pages/Notifications.jsx
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useToast } from '../contexts/useToast';
+import { useToast } from '../contexts/useToast.js';
+import { respondFriendRequest } from '../lib/api/friends.js';
 import {
     fetchNotifications,
     markAllNotificationsRead,
     markNotificationRead,
-} from '../lib/api/notifications';
+} from '../lib/api/notifications.js';
+import { confirmSession } from '../lib/api/sessions.js';
 
 function classNames(...xs) {
   return xs.filter(Boolean).join(' ');
@@ -35,8 +37,6 @@ function timeAgo(iso) {
   return `${days}d ago`;
 }
 
-// Tries to map a notification to an in-app route.
-// Falls back to provided `link` if present, else no-op (#).
 function resolveLink(n) {
   if (n?.link) return n.link;
   switch (n?.type) {
@@ -61,6 +61,7 @@ export default function NotificationsPage() {
   const [meta, setMeta] = useState({ page: 1, limit: 20, total: 0, unreadCount: 0 });
   const [loading, setLoading] = useState(true);
   const [markingAll, setMarkingAll] = useState(false);
+  const [busy, setBusy] = useState({}); // per-item action spinner
   const [params, setParams] = useSearchParams();
   const status = (params.get('status') || 'unread').toLowerCase();
   const page = parseInt(params.get('page') || '1', 10);
@@ -96,6 +97,37 @@ export default function NotificationsPage() {
       toast.success('Marked as read');
     } catch {
       toast.error('Could not mark as read');
+    }
+  }
+
+  async function onFriendRespond(n, action) {
+    const id = n._id;
+    setBusy((b) => ({ ...b, [id]: true }));
+    try {
+      await respondFriendRequest(n?.sender?._id || n.sender, action); // "Accepted" | "Rejected"
+      setItems((prev) => prev.map((x) => (x._id === id ? { ...x, isRead: true } : x)));
+      setMeta((m) => ({ ...m, unreadCount: Math.max(0, (m.unreadCount || 0) - 1) }));
+      toast.success(action === 'Accepted' ? 'Friend request accepted' : 'Friend request rejected');
+    } catch {
+      toast.error('Action failed');
+    } finally {
+      setBusy((b) => ({ ...b, [id]: false }));
+    }
+  }
+
+  async function onConfirmMatch(n) {
+    if (!n.sessionId) return navigate('/matches');
+    setBusy((b) => ({ ...b, [n._id]: true }));
+    try {
+      await confirmSession(n.sessionId);
+      setItems((prev) => prev.map((x) => (x._id === n._id ? { ...x, isRead: true } : x)));
+      setMeta((m) => ({ ...m, unreadCount: Math.max(0, (m.unreadCount || 0) - 1) }));
+      toast.success('Match confirmed');
+      navigate(`/matches/${n.sessionId}`);
+    } catch {
+      toast.error('Could not confirm match');
+    } finally {
+      setBusy((b) => ({ ...b, [n._id]: false }));
     }
   }
 
@@ -171,6 +203,40 @@ export default function NotificationsPage() {
             const icon = TYPE_ICON[n?.type] || TYPE_ICON.DEFAULT;
             const link = resolveLink(n);
             const isLink = link && link !== '#';
+
+            const senderName =
+              n?.sender?.firstName
+                ? `${n.sender.firstName}${n.sender.lastName ? ' ' + n.sender.lastName : ''}`
+                : undefined;
+
+            // Human title (ignore legacy HTML message content)
+            let title = n.title || 'Notification';
+            let description = n.description || undefined;
+            if (!n.title) {
+              switch (n?.type) {
+                case 'FRIEND_REQUEST':
+                  title = `${senderName || 'Someone'} sent you a friend request`;
+                  break;
+                case 'FRIEND_ACCEPTED':
+                  title = `${senderName || 'Your friend'} accepted your friend request`;
+                  break;
+                case 'MATCH_INVITE':
+                  title = `You've been added to a match`;
+                  break;
+                case 'MATCH_UPDATED':
+                  title = `Match was updated`;
+                  break;
+                case 'MATCH_REMINDER':
+                  title = `Match reminder`;
+                  break;
+                case 'MATCH_CONFIRMED':
+                  title = `Match confirmed`;
+                  break;
+                default:
+                  title = n.type || 'Notification';
+              }
+            }
+
             return (
               <div
                 key={n._id}
@@ -179,22 +245,55 @@ export default function NotificationsPage() {
                 <div className="text-xl leading-none">{icon}</div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="font-medium text-[var(--color-primary)] truncate">
-                      {n.title || n.message || n.type || 'Notification'}
-                    </p>
+                    <p className="font-medium text-[var(--color-primary)] truncate">{title}</p>
                     <span className="text-xs text-[var(--color-secondary)]">
                       {n.createdAt ? timeAgo(n.createdAt) : ''}
                     </span>
                   </div>
-                  {n.description ? (
-                    <p className="mt-1 text-sm text-[var(--color-secondary)]">{n.description}</p>
+
+                  {description ? (
+                    <div className="mt-1 text-sm text-[var(--color-secondary)] max-h-32 overflow-auto pr-1">
+                      {description}
+                    </div>
                   ) : null}
-                  <div className="mt-2 flex gap-2">
+
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {n.type === 'FRIEND_REQUEST' && (n.sender || n?.sender?._id) && !n.isRead && (
+                      <>
+                        <button
+                          onClick={() => onFriendRespond(n, 'Accepted')}
+                          disabled={!!busy[n._id]}
+                          className="btn btn-primary"
+                        >
+                          {busy[n._id] ? 'Accepting…' : 'Accept'}
+                        </button>
+                        <button
+                          onClick={() => onFriendRespond(n, 'Rejected')}
+                          disabled={!!busy[n._id]}
+                          className="btn bg-white border border-[var(--color-warning)] text-[var(--color-warning)] hover:bg-[color-mix(in_oklab,var(--color-warning)_10%,white)]"
+                        >
+                          {busy[n._id] ? 'Rejecting…' : 'Reject'}
+                        </button>
+                      </>
+                    )}
+
+                    {(n.type === 'MATCH_INVITE' || n.type === 'MATCH_UPDATED' || n.type === 'MATCH_REMINDER') &&
+                      n.sessionId && (
+                        <button
+                          onClick={() => onConfirmMatch(n)}
+                          disabled={!!busy[n._id]}
+                          className="btn btn-primary"
+                        >
+                          {busy[n._id] ? 'Confirming…' : 'Confirm'}
+                        </button>
+                      )}
+
                     {isLink && (
-                      <button onClick={() => navigate(link)} className="btn btn-primary">
+                      <button onClick={() => navigate(link)} className="btn bg-white border border-[var(--color-border-muted)]">
                         Open
                       </button>
                     )}
+
                     {!n.isRead && (
                       <button
                         onClick={() => onMarkRead(n._id)}
