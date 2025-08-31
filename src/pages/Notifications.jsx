@@ -1,10 +1,16 @@
 // src/pages/Notifications.jsx
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useToast } from '../contexts/ToastProvider';
-import { fetchNotifications, markAllNotificationsRead, markNotificationRead } from '../lib/api/notifications';
+import {
+    fetchNotifications,
+    markAllNotificationsRead,
+    markNotificationRead,
+} from '../lib/api/notifications';
 
-function classNames(...xs) { return xs.filter(Boolean).join(' '); }
+function classNames(...xs) {
+  return xs.filter(Boolean).join(' ');
+}
 
 const TYPE_ICON = {
   FRIEND_REQUEST: '👋',
@@ -13,7 +19,7 @@ const TYPE_ICON = {
   MATCH_REMINDER: '⏰',
   MATCH_UPDATED: '✏️',
   MATCH_CONFIRMED: '🏁',
-  DEFAULT: '🔔'
+  DEFAULT: '🔔',
 };
 
 function timeAgo(iso) {
@@ -34,13 +40,14 @@ function timeAgo(iso) {
 function resolveLink(n) {
   if (n?.link) return n.link;
   switch (n?.type) {
-    case 'FRIEND_REQUEST': return '/friends/requests';
-    case 'FRIEND_ACCEPTED': return '/friends';
+    case 'FRIEND_REQUEST':
+      return '/friends/requests';
+    case 'FRIEND_ACCEPTED':
+      return '/friends';
     case 'MATCH_INVITE':
     case 'MATCH_REMINDER':
     case 'MATCH_UPDATED':
     case 'MATCH_CONFIRMED':
-      // support n.sessionId or n.entityId
       if (n.sessionId) return `/matches/${n.sessionId}`;
       if (n.entityId) return `/matches/${n.entityId}`;
       return '/matches';
@@ -64,26 +71,28 @@ export default function NotificationsPage() {
   const hasNext = useMemo(() => meta.page * meta.limit < meta.total, [meta]);
   const hasPrev = page > 1;
 
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetchNotifications({ status, page, limit });
       setItems(res.data || []);
       setMeta(res.meta || { page, limit, total: 0, unreadCount: 0 });
-    } catch (e) {
+    } catch {
       toast.error('Failed to load notifications');
     } finally {
       setLoading(false);
     }
-  }
+  }, [status, page, limit, toast]);
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [status, page, limit]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   async function onMarkRead(id) {
     try {
       await markNotificationRead(id);
-      setItems(prev => prev.map(n => (n._id === id ? { ...n, isRead: true } : n)));
-      setMeta(m => ({ ...m, unreadCount: Math.max(0, (m.unreadCount || 0) - 1) }));
+      setItems((prev) => prev.map((n) => (n._id === id ? { ...n, isRead: true } : n)));
+      setMeta((m) => ({ ...m, unreadCount: Math.max(0, (m.unreadCount || 0) - 1) }));
       toast.success('Marked as read');
     } catch {
       toast.error('Could not mark as read');
@@ -94,8 +103,8 @@ export default function NotificationsPage() {
     setMarkingAll(true);
     try {
       await markAllNotificationsRead();
-      setItems(prev => prev.map(n => ({ ...n, isRead: true })));
-      setMeta(m => ({ ...m, unreadCount: 0 }));
+      setItems((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      setMeta((m) => ({ ...m, unreadCount: 0 }));
       toast.success('All notifications marked read');
     } catch {
       toast.error('Could not mark all as read');
@@ -163,38 +172,37 @@ export default function NotificationsPage() {
             const link = resolveLink(n);
             const isLink = link && link !== '#';
             return (
-              <div key={n._id} className={classNames(
-                'p-4 flex items-start gap-3',
-                n.isRead ? 'opacity-70' : ''
-              )}>
+              <div
+                key={n._id}
+                className={classNames('p-4 flex items-start gap-3', n.isRead ? 'opacity-70' : '')}
+              >
                 <div className="text-xl leading-none">{icon}</div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="font-medium text-[var(--color-primary)] truncate">
                       {n.title || n.message || n.type || 'Notification'}
                     </p>
-                    <span className="text-xs text-[var(--color-secondary)]">{n.createdAt ? timeAgo(n.createdAt) : ''}</span>
+                    <span className="text-xs text-[var(--color-secondary)]">
+                      {n.createdAt ? timeAgo(n.createdAt) : ''}
+                    </span>
                   </div>
                   {n.description ? (
                     <p className="mt-1 text-sm text-[var(--color-secondary)]">{n.description}</p>
                   ) : null}
                   <div className="mt-2 flex gap-2">
                     {isLink && (
-                      <button
-                        onClick={() => navigate(link)}
-                        className="btn btn-primary"
-                      >
+                      <button onClick={() => navigate(link)} className="btn btn-primary">
                         Open
                       </button>
                     )}
                     {!n.isRead && (
-                       <button
-                         onClick={() => onMarkRead(n._id)}
-                         className="btn bg-white border border-[var(--color-border-muted)]"
-                       >
-                         Mark read
-                       </button>
-                     )}
+                      <button
+                        onClick={() => onMarkRead(n._id)}
+                        className="btn bg-white border border-[var(--color-border-muted)]"
+                      >
+                        Mark read
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
