@@ -8,7 +8,7 @@ import {
     markAllNotificationsRead,
     markNotificationRead,
 } from '../lib/api/notifications.js';
-import { confirmSession } from '../lib/api/sessions.js';
+import { confirmSession, declineSession } from '../lib/api/sessions.js';
 
 function classNames(...xs) {
   return xs.filter(Boolean).join(' ');
@@ -17,10 +17,12 @@ function classNames(...xs) {
 const TYPE_ICON = {
   FRIEND_REQUEST: '👋',
   FRIEND_ACCEPTED: '✅',
+  FRIEND_ACCEPT: '✅',
   MATCH_INVITE: '🎮',
   MATCH_REMINDER: '⏰',
   MATCH_UPDATED: '✏️',
   MATCH_CONFIRMED: '🏁',
+  MATCH_DECLINED: '🚫',
   DEFAULT: '🔔',
 };
 
@@ -131,6 +133,21 @@ export default function NotificationsPage() {
     }
   }
 
+async function onDeclineMatch(n) {
+    if (!n.sessionId) return;
+    setBusy((b) => ({ ...b, [n._id]: true }));
+    try {
+      await declineSession(n.sessionId);
+      setItems((prev) => prev.map((x) => (x._id === n._id ? { ...x, isRead: true } : x)));
+      setMeta((m) => ({ ...m, unreadCount: Math.max(0, (m.unreadCount || 0) - 1) }));
+      toast.info('You declined this match');
+    } catch {
+      toast.error('Could not decline match');
+    } finally {
+      setBusy((b) => ({ ...b, [n._id]: false }));
+    }
+  }
+
   async function onMarkAllRead() {
     setMarkingAll(true);
     try {
@@ -209,7 +226,6 @@ export default function NotificationsPage() {
                 ? `${n.sender.firstName}${n.sender.lastName ? ' ' + n.sender.lastName : ''}`
                 : undefined;
 
-            // Human title (ignore legacy HTML message content)
             let title = n.title || 'Notification';
             let description = n.description || undefined;
             if (!n.title) {
@@ -218,6 +234,7 @@ export default function NotificationsPage() {
                   title = `${senderName || 'Someone'} sent you a friend request`;
                   break;
                 case 'FRIEND_ACCEPTED':
+                case 'FRIEND_ACCEPT':
                   title = `${senderName || 'Your friend'} accepted your friend request`;
                   break;
                 case 'MATCH_INVITE':
@@ -232,6 +249,9 @@ export default function NotificationsPage() {
                 case 'MATCH_CONFIRMED':
                   title = `Match confirmed`;
                   break;
+                case 'MATCH_DECLINED':
+                  title = `A player declined the match`;
+                  break;
                 default:
                   title = n.type || 'Notification';
               }
@@ -243,7 +263,7 @@ export default function NotificationsPage() {
                 className={classNames('p-4 flex items-start gap-3', n.isRead ? 'opacity-70' : '')}
               >
                 <div className="text-xl leading-none">{icon}</div>
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 max-h-48 overflow-auto pr-1">
                   <div className="flex items-center gap-2">
                     <p className="font-medium text-[var(--color-primary)] truncate">{title}</p>
                     <span className="text-xs text-[var(--color-secondary)]">
@@ -279,13 +299,22 @@ export default function NotificationsPage() {
 
                     {(n.type === 'MATCH_INVITE' || n.type === 'MATCH_UPDATED' || n.type === 'MATCH_REMINDER') &&
                       n.sessionId && (
-                        <button
-                          onClick={() => onConfirmMatch(n)}
-                          disabled={!!busy[n._id]}
-                          className="btn btn-primary"
-                        >
-                          {busy[n._id] ? 'Confirming…' : 'Confirm'}
-                        </button>
+                        <>
+                          <button
+                            onClick={() => onConfirmMatch(n)}
+                            disabled={!!busy[n._id]}
+                            className="btn btn-primary"
+                          >
+                            {busy[n._id] ? 'Confirming…' : 'Confirm'}
+                          </button>
+                          <button
+                            onClick={() => onDeclineMatch(n)}
+                            disabled={!!busy[n._id]}
+                            className="btn bg-white border border-[var(--color-warning)] text-[var(--color-warning)] hover:bg-[color-mix(in_oklab,var(--color-warning)_10%,white)]"
+                          >
+                            {busy[n._id] ? 'Declining…' : 'Decline'}
+                          </button>
+                        </>
                       )}
 
                     {isLink && (

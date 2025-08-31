@@ -34,7 +34,7 @@ export default function App() {
             <Route path="/verify-email" element={<VerifyEmailPage />} />
             <Route path="/check-email" element={<CheckEmailPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="/notifications" element={<NotificationsPage />} />
+
 
             {/* Private */}
             <Route element={<ProtectedRoute />}>
@@ -47,6 +47,7 @@ export default function App() {
                 <Route path="/friends" element={<FriendsPage />} />   
                 <Route path="/friends/requests" element={<FriendRequestsPage />} />
                 <Route path="/profile/me" element={<ProfilePage />} />
+                <Route path="/notifications" element={<NotificationsPage />} />
                 {/* TODO: /matches/new, /matches, /profile/:id */}
               </Route>
             </Route>
