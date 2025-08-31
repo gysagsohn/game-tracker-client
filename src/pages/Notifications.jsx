@@ -226,7 +226,9 @@ async function onDeclineMatch(n) {
                 ? `${n.sender.firstName}${n.sender.lastName ? ' ' + n.sender.lastName : ''}`
                 : undefined;
 
-            let title = n.title || 'Notification';
+
+            const prettyType = (n?.type || 'Notification').replace(/_/g, ' ').trim();
+            let title = n.title || prettyType;
             let description = n.description || undefined;
             if (!n.title) {
               switch (n?.type) {
@@ -253,7 +255,7 @@ async function onDeclineMatch(n) {
                   title = `A player declined the match`;
                   break;
                 default:
-                  title = n.type || 'Notification';
+                  title = prettyType;
               }
             }
 
