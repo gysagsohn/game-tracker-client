@@ -118,7 +118,7 @@
 }
 
 /*  React Day Picker compact styles (*/
-@layer components {
+  /* Compact DayPicker look (you already have these) */
   .rdp-compact .rdp {
     --rdp-cell-size: 36px;
     --rdp-accent-color: var(--color-cta);
@@ -127,7 +127,19 @@
   .rdp-compact .rdp-months { justify-content: center; }
   .rdp-compact .rdp-caption { padding: 6px 8px; }
   .rdp-compact .rdp-head_cell { padding: 4px 0; font-size: 12px; }
-  .rdp-compact .rdp-dropdown { max-width: 7rem; } 
-}
+  .rdp-compact .rdp-dropdown { max-width: 7rem; }
+
+  /* Popover responsiveness */
+  .date-popover {
+    min-width: 20rem;   /* desktop/tablet */
+    max-width: 22rem;
+  }
+  @media (max-width: 420px) {
+    .date-popover {
+      min-width: 16rem; /* allow smaller on narrow screens */
+      width: calc(100vw - 2rem);
+    }
+  }
+
 
 

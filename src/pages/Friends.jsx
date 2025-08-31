@@ -1,5 +1,5 @@
 // src/pages/Friends.jsx
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
@@ -7,13 +7,20 @@ import Input from "../components/ui/Input";
 import { useAuth } from "../contexts/useAuth";
 import api from "../lib/axios";
 
-function UserRow({ user, right }) {
-  const name = `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || user?.email || "User";
+function UserRow({ user, right, subtitle }) {
+  const name =
+    `${user?.firstName || ""} ${user?.lastName || ""}`.trim() ||
+    user?.email ||
+    "User";
   return (
     <div className="flex items-center justify-between gap-3 border border-[--color-border-muted] rounded-[var(--radius-standard)] p-2">
       <div className="min-w-0">
         <div className="text-sm font-medium truncate">{name}</div>
-        {user?.email && <div className="text-xs text-secondary truncate">{user.email}</div>}
+        {(user?.email || subtitle) && (
+          <div className="text-xs text-secondary truncate">
+            {subtitle || user?.email}
+          </div>
+        )}
       </div>
       <div className="flex items-center gap-2">{right}</div>
     </div>
@@ -31,11 +38,13 @@ export default function FriendsPage() {
   const [ok, setOk] = useState("");
   const [err, setErr] = useState("");
 
-  const [friends, setFriends] = useState([]);
-  const [requests, setRequests] = useState([]);  // incoming
-  const [sent, setSent] = useState([]);          // NEW: outgoing you sent
-  const [suggested, setSuggested] = useState([]);
+  // data
+  const [friends, setFriends] = useState([]);     // /friends/list/:id
+  const [requests, setRequests] = useState([]);   // /friends/requests  [{ user, status }]
+  const [sent, setSent] = useState([]);           // /friends/sent      [{ user, status }]
+  const [suggested, setSuggested] = useState([]); // /friends/suggested
 
+  // send-by-email form
   const [targetEmail, setTargetEmail] = useState("");
   const [sending, setSending] = useState(false);
 
@@ -45,26 +54,7 @@ export default function FriendsPage() {
     setParams(nextParams, { replace: true });
   };
 
-  // Fetch helpers
-  const fetchFriendsList = useCallback(async () => {
-    const res = await api.get(`/friends/list/${myId}`);
-    const payload = res.data?.data || res.data || [];
-    setFriends(Array.isArray(payload) ? payload : []);
-  }, [myId]);
-
-  const fetchPendingRequests = useCallback(async () => {
-    const res = await api.get("/friends/requests");
-    const payload = res.data?.data || res.data || [];
-    setRequests(Array.isArray(payload) ? payload : []);
-  }, []);
-
-  const fetchSent = useCallback(async () => {
-    const res = await api.get("/friends/sent"); // returns [{ user, status }]
-    const payload = res.data?.data || res.data || [];
-    setSent(Array.isArray(payload) ? payload : []);
-  }, []);
-
-  // Load per tab
+  // Load data for the current tab
   useEffect(() => {
     let ignore = false;
     async function load() {
@@ -73,12 +63,19 @@ export default function FriendsPage() {
         setLoading(true);
         setErr("");
         setOk("");
+
         if (tab === "list") {
-          if (!ignore) await fetchFriendsList();
+          const res = await api.get(`/friends/list/${myId}`);
+          const payload = res.data?.data || res.data || [];
+          if (!ignore) setFriends(Array.isArray(payload) ? payload : []);
         } else if (tab === "requests") {
-          if (!ignore) await fetchPendingRequests();
+          const res = await api.get("/friends/requests");
+          const payload = res.data?.data || res.data || [];
+          if (!ignore) setRequests(Array.isArray(payload) ? payload : []);
         } else if (tab === "sent") {
-          if (!ignore) await fetchSent();
+          const res = await api.get("/friends/sent"); // Pending by default
+          const payload = res.data?.data || res.data || [];
+          if (!ignore) setSent(Array.isArray(payload) ? payload : []);
         } else if (tab === "suggested") {
           const res = await api.get("/friends/suggested");
           const payload = res.data?.data || res.data || [];
@@ -92,8 +89,9 @@ export default function FriendsPage() {
     }
     load();
     return () => { ignore = true; };
-  }, [tab, myId, fetchFriendsList, fetchPendingRequests, fetchSent]);
+  }, [tab, myId]);
 
+  // counts shown on tabs
   const counts = useMemo(
     () => ({
       list: friends.length,
@@ -109,8 +107,11 @@ export default function FriendsPage() {
     try {
       setErr(""); setOk("");
       await api.post("/friends/respond", { senderId, action: "Accepted" });
-      await Promise.all([fetchPendingRequests(), fetchFriendsList()]);
+      setRequests((prev) => prev.filter((r) => r.user?._id !== senderId));
       setOk("Friend request accepted.");
+      // Optionally refresh friends list:
+      // const { data } = await api.get(`/friends/list/${myId}`);
+      // setFriends(data?.data || data || []);
     } catch (e) {
       setErr(e.message || "Failed to accept.");
     }
@@ -120,7 +121,7 @@ export default function FriendsPage() {
     try {
       setErr(""); setOk("");
       await api.post("/friends/respond", { senderId, action: "Rejected" });
-      await fetchPendingRequests();
+      setRequests((prev) => prev.filter((r) => r.user?._id !== senderId));
       setOk("Friend request rejected.");
     } catch (e) {
       setErr(e.message || "Failed to reject.");
@@ -131,7 +132,7 @@ export default function FriendsPage() {
     try {
       setErr(""); setOk("");
       await api.post("/friends/unfriend", { friendId });
-      await fetchFriendsList();
+      setFriends((prev) => prev.filter((f) => f._id !== friendId));
       setOk("Removed from friends.");
     } catch (e) {
       setErr(e.message || "Failed to unfriend.");
@@ -147,8 +148,11 @@ export default function FriendsPage() {
       await api.post("/friends/send", { email: targetEmail.trim() });
       setTargetEmail("");
       setOk("Friend request sent.");
-      // Optionally refresh sent tab if user is on it
-      if (tab === "sent") await fetchSent();
+      // If you're on Sent tab, reflect immediately
+      if (tab === "sent") {
+        const res = await api.get("/friends/sent");
+        setSent(res.data?.data || res.data || []);
+      }
     } catch (e) {
       setErr(e.message || "Failed to send request.");
     } finally {
@@ -161,13 +165,17 @@ export default function FriendsPage() {
     try {
       setErr(""); setOk("");
       await api.post("/friends/send", { email: u.email });
-      setOk(`Friend request sent to ${`${u.firstName || ""} ${u.lastName || ""}`.trim() || u.email}`);
-      if (tab === "sent") await fetchSent();
+      setOk(`Friend request sent to ${u.firstName || ""} ${u.lastName || ""}`.trim());
+      if (tab === "sent") {
+        const res = await api.get("/friends/sent");
+        setSent(res.data?.data || res.data || []);
+      }
     } catch (e) {
       setErr(e.message || "Failed to send request.");
     }
   };
 
+  // UI helpers
   const TabButton = ({ id, children }) => (
     <button
       type="button"
@@ -187,6 +195,7 @@ export default function FriendsPage() {
     <main className="py-2 lg:py-6">
       <h1 className="h1 text-center mb-6 lg:mb-10">Friends</h1>
 
+      {/* Tabs */}
       <div className="flex flex-wrap items-center gap-2 justify-center mb-4">
         <TabButton id="list">My Friends {counts.list ? `(${counts.list})` : ""}</TabButton>
         <TabButton id="requests">Requests {counts.requests ? `(${counts.requests})` : ""}</TabButton>
@@ -194,12 +203,7 @@ export default function FriendsPage() {
         <TabButton id="suggested">Suggested {counts.suggested ? `(${counts.suggested})` : ""}</TabButton>
       </div>
 
-      {tab === "requests" && (
-        <p className="text-xs text-secondary text-center mb-2">
-          These are requests <em>sent to you</em>. Requests you send appear under the <strong>Sent</strong> tab.
-        </p>
-      )}
-
+      {/* Quick send by email (visible on all tabs) */}
       <form onSubmit={sendByEmail} className="mx-auto max-w-xl mb-4 grid grid-cols-[1fr_auto] gap-2 items-end">
         <Input
           label="Send a friend request by email"
@@ -214,6 +218,7 @@ export default function FriendsPage() {
         </Button>
       </form>
 
+      {/* Feedback banners */}
       {err && (
         <div
           className="mb-4 rounded-[var(--radius-standard)] border p-3 text-sm mx-auto max-w-xl"
@@ -238,6 +243,7 @@ export default function FriendsPage() {
         </div>
       )}
 
+      {/* Content per tab */}
       <div className="grid gap-3 max-w-3xl mx-auto">
         {loading ? (
           Array.from({ length: 4 }).map((_, i) => (
@@ -248,19 +254,27 @@ export default function FriendsPage() {
           ))
         ) : tab === "list" ? (
           friends.length === 0 ? (
-            <Card className="p-6 text-center"><p className="text-secondary">You haven’t added any friends yet.</p></Card>
+            <Card className="p-6 text-center">
+              <p className="text-secondary">You haven’t added any friends yet.</p>
+            </Card>
           ) : (
             friends.map((u) => (
               <UserRow
                 key={u._id}
                 user={u}
-                right={<Button className="btn-sm" onClick={() => unfriend(u._id)}>Unfriend</Button>}
+                right={
+                  <Button className="btn-sm" onClick={() => unfriend(u._id)}>
+                    Unfriend
+                  </Button>
+                }
               />
             ))
           )
         ) : tab === "requests" ? (
           requests.length === 0 ? (
-            <Card className="p-6 text-center"><p className="text-secondary">No pending requests.</p></Card>
+            <Card className="p-6 text-center">
+              <p className="text-secondary">No pending requests.</p>
+            </Card>
           ) : (
             requests.map((r) => (
               <UserRow
@@ -268,8 +282,12 @@ export default function FriendsPage() {
                 user={r.user}
                 right={
                   <>
-                    <Button className="btn-sm" onClick={() => accept(r.user._id)}>Accept</Button>
-                    <Button className="btn-sm" onClick={() => reject(r.user._id)}>Reject</Button>
+                    <Button className="btn-sm" onClick={() => accept(r.user._id)}>
+                      Accept
+                    </Button>
+                    <Button className="btn-sm" onClick={() => reject(r.user._id)}>
+                      Reject
+                    </Button>
                   </>
                 }
               />
@@ -277,19 +295,25 @@ export default function FriendsPage() {
           )
         ) : tab === "sent" ? (
           sent.length === 0 ? (
-            <Card className="p-6 text-center"><p className="text-secondary">You haven’t sent any requests yet.</p></Card>
+            <Card className="p-6 text-center">
+              <p className="text-secondary">No sent requests.</p>
+            </Card>
           ) : (
             sent.map((r) => (
               <UserRow
                 key={r?.user?._id}
                 user={r.user}
-                right={<span className="text-xs text-secondary">{r.status}</span>}
+                subtitle={`Status: ${r.status || "Pending"}`}
+                right={null /* add Cancel here later if you add a cancel endpoint */}
               />
             ))
           )
         ) : (
-          suggested.length === 0 ? (
-            <Card className="p-6 text-center"><p className="text-secondary">No suggestions right now.</p></Card>
+          // suggested
+          (suggested.length === 0 ? (
+            <Card className="p-6 text-center">
+              <p className="text-secondary">No suggestions right now.</p>
+            </Card>
           ) : (
             suggested.map((u) => (
               <UserRow
@@ -302,7 +326,7 @@ export default function FriendsPage() {
                 }
               />
             ))
-          )
+          ))
         )}
       </div>
     </main>
