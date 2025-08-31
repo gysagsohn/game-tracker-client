@@ -1,15 +1,27 @@
 // src/pages/Login.jsx
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
 import GoogleButton from "../components/GoogleButton";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import PasswordInput from "../components/ui/PasswordInput";
 import { useAuth } from "../contexts/useAuth";
+import { useToast } from "../contexts/useToast";
 import { isEmail, validatePasswordLogin } from "../utils/validators";
 
 export default function LoginPage() {
+  const { state } = useLocation();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (state?.justReset) {
+      toast.success("Password updated. Please sign in.");
+      // Clear the navigation state so it doesn't re-toast on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [state, toast]);
+
   const nav = useNavigate();
   const { login } = useAuth();
   const [form, setForm] = useState({ email: "", password: "" });
@@ -49,7 +61,6 @@ export default function LoginPage() {
     }
   };
 
-  // Option A: compute once, then USE it on the button
   const submitDisabled = loading || !!errors.email || !!errors.password;
 
   return (
@@ -57,7 +68,11 @@ export default function LoginPage() {
       <div className="mx-auto max-w-6xl w-full">
         <div className="grid gap-8 lg:grid-cols-2 lg:items-center">
           <div className="flex justify-center lg:justify-start">
-            <img src={logo} alt="Game Tracker" className="w-32 h-auto sm:w-40 lg:w-[520px] lg:max-w-[520px]" />
+            <img
+              src={logo}
+              alt="Game Tracker"
+              className="w-32 h-auto sm:w-40 lg:w-[520px] lg:max-w-[520px]"
+            />
           </div>
 
           <div className="card shadow-card p-6 bg-card rounded-[var(--radius-standard)] w-full max-w-md justify-self-center lg:justify-self-auto text-center">
@@ -111,17 +126,20 @@ export default function LoginPage() {
                 type="submit"
                 className="w-full"
                 loading={loading}
-                disabled={submitDisabled} // <-- using it here fixes the ESLint warning
+                disabled={submitDisabled}
               >
                 Sign in
               </Button>
 
               <div className="text-center">
-                <Link to="/forgot-password" className="text-sm underline" style={{ color: "var(--color-cta)" }}>
+                <Link
+                  to="/forgot-password"
+                  className="text-sm underline"
+                  style={{ color: "var(--color-cta)" }}
+                >
                   Forgot password?
                 </Link>
               </div>
-
 
               <div className="flex items-center my-4">
                 <div className="flex-grow border-t border-[--color-border-muted]" />

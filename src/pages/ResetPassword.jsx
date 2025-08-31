@@ -1,8 +1,8 @@
+// src/pages/ResetPassword.jsx
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
-import { useAuth } from "../contexts/useAuth"; // ⬅️ ensure this exists
 import { useToast } from "../contexts/useToast";
 import api from "../lib/axios";
 
@@ -13,11 +13,11 @@ export default function ResetPasswordPage() {
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-  const { login } = useAuth(); // ⬅️ expects login(token, user)
   const nav = useNavigate();
 
   const onSubmit = async (e) => {
     e.preventDefault();
+
     if (!token) return toast.error("Missing token.");
     if (password.length < 8) return toast.error("Password must be at least 8 characters.");
     if (password !== confirm) return toast.error("Passwords do not match.");
@@ -25,17 +25,10 @@ export default function ResetPasswordPage() {
     try {
       setLoading(true);
       const res = await api.post("/auth/reset-password", { token, password });
-      const { message, token: freshToken, user } = res.data || {};
-      toast.success(message || "Password has been reset. You’re now logged in.");
-
-      if (freshToken && user) {
-        // preferred: use your auth context
-        login(freshToken, user);
-        nav("/", { replace: true });
-      } else {
-        // fallback if API didn’t return token (shouldn’t happen with controller above)
-        nav("/login", { replace: true });
-      }
+      const { message } = res.data || {};
+      toast.success(message || "Password has been reset. Please log in.");
+      // Redirect to login (no auto-login after reset)
+      nav("/login", { replace: true, state: { justReset: true } });
     } catch (err) {
       const msg = err?.response?.data?.message || err.message || "Reset failed.";
       toast.error(msg);
