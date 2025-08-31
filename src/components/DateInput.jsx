@@ -1,4 +1,4 @@
-// src/components/DateInput.jsx
+// src/components/forms/DateInput.jsx
 import { useEffect, useId, useMemo, useState } from "react";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
@@ -9,7 +9,7 @@ function toStartOfDay(d) {
   return x;
 }
 
-export default function DateInput({ label = "Date", value, onChange }) {
+export default function DateInput({ label = "Date", value, onChange, required }) {
   const [open, setOpen] = useState(false);
   const inputId = useId();
 
@@ -28,20 +28,31 @@ export default function DateInput({ label = "Date", value, onChange }) {
     <div className="relative">
       <label htmlFor={inputId} className="block text-sm font-medium mb-1">
         {label}
+        {required ? <span className="text-[--color-warning]"> *</span> : null}
       </label>
+
+      {/* Looks like an input; no calendar icon */}
       <button
         id={inputId}
         type="button"
-        className="input w-full text-left flex items-center justify-between"
+        className="input w-full text-left"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
+        aria-haspopup="dialog"
+        aria-required={required || undefined}  // <- uses the prop to silence ESLint
       >
-        <span>{selected.toLocaleDateString()}</span>
-        <span aria-hidden>📅</span>
+        {selected.toLocaleDateString()}
       </button>
 
       {open && (
-        <div className="absolute z-50 mt-2 bg-white rounded-xl shadow-card border p-2">
+        <div
+          role="dialog"
+          aria-label="Choose a date"
+          className="
+            absolute z-50 mt-2 bg-white rounded-xl shadow-card border p-2
+            w-[18rem] max-w-[calc(100vw-2rem)] right-0
+          "
+        >
           <DayPicker
             mode="single"
             selected={selected}
@@ -52,8 +63,8 @@ export default function DateInput({ label = "Date", value, onChange }) {
               setOpen(false);
             }}
             weekStartsOn={1}
-            captionLayout="dropdown"
-            initialFocus
+            captionLayout="dropdown-buttons"
+            className="rdp-compact"
           />
         </div>
       )}

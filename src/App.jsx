@@ -17,6 +17,7 @@ import NewMatchPage from "./pages/NewMatch";
 import NotificationsPage from "./pages/Notifications";
 import OAuthSuccess from "./pages/OAuthSuccess";
 import ProfilePage from "./pages/Profile";
+import ResetPasswordPage from "./pages/ResetPassword";
 import Signup from "./pages/Signup";
 import VerifyEmailPage from "./pages/VerifyEmail";
 
@@ -34,6 +35,7 @@ export default function App() {
             <Route path="/verify-email" element={<VerifyEmailPage />} />
             <Route path="/check-email" element={<CheckEmailPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
 
 
             {/* Private */}

@@ -116,3 +116,27 @@
   .card { background: var(--color-card); border: 1px solid color-mix(in oklab, var(--color-border-muted) 60%, transparent); border-radius: var(--radius-standard); }
 
 }
+
+/*  React Day Picker compact styles (*/
+@layer utilities {
+  .rdp-compact {
+    --rdp-cell-size: 32px;            /* smaller cells */
+    --rdp-accent-color: var(--color-cta);
+    --rdp-background-color: #fff;
+  }
+
+  .rdp-compact .rdp-months { padding: 0.25rem; }
+  .rdp-compact .rdp-caption_dropdowns { gap: 0.25rem; }
+  .rdp-compact .rdp-caption select {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  /* Make the grid a touch tighter */
+  .rdp-compact .rdp-table { margin: 0; }
+  .rdp-compact .rdp-head_cell,
+  .rdp-compact .rdp-cell {
+    padding: 0.125rem;
+  }
+}
+
