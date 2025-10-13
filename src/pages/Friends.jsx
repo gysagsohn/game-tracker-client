@@ -6,6 +6,7 @@ import Card from "../components/ui/Card";
 import Input from "../components/ui/Input";
 import { useAuth } from "../contexts/useAuth";
 import api from "../lib/axios";
+import FriendSearch from "../components/friends/FriendSearch";
 
 function UserRow({ user, right, subtitle }) {
   const name =
@@ -202,6 +203,10 @@ export default function FriendsPage() {
         <TabButton id="sent">Sent {counts.sent ? `(${counts.sent})` : ""}</TabButton>
         <TabButton id="suggested">Suggested {counts.suggested ? `(${counts.suggested})` : ""}</TabButton>
       </div>
+      <div className="mb-6">
+      <FriendSearch />
+      </div>
+
 
       {/* Quick send by email (visible on all tabs) */}
       <form onSubmit={sendByEmail} className="mx-auto max-w-xl mb-4 grid grid-cols-[1fr_auto] gap-2 items-end">
