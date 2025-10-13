@@ -1,5 +1,4 @@
 import { useCallback, useState } from "react";
-import { useAuth } from "../../contexts/useAuth";
 import { useToast } from "../../contexts/useToast";
 import api from "../../lib/axios";
 import Button from "../ui/Button";
@@ -17,7 +16,7 @@ function useDebounce(callback, delay) {
 }
 
 export default function FriendSearch() {
-  const { user } = useAuth();
+  
   const { toast } = useToast();
   
   const [query, setQuery] = useState("");

@@ -8,6 +8,7 @@ import { useAuth } from "../contexts/useAuth";
 import api from "../lib/axios";
 import FriendSearch from "../components/friends/FriendSearch";
 
+
 function UserRow({ user, right, subtitle }) {
   const name =
     `${user?.firstName || ""} ${user?.lastName || ""}`.trim() ||
