@@ -1,10 +1,10 @@
-
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import { useAuth } from "../contexts/useAuth";
 import api from "../lib/axios";
+import Skeleton from "../components/ui/Skeleton";
 
 function idOf(v) {
   if (!v) return null;
@@ -55,7 +55,9 @@ export default function MatchesPage() {
       }
     }
     load();
-    return () => { ignore = true; };
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   // Derived list with filters
@@ -64,7 +66,8 @@ export default function MatchesPage() {
 
     if (filters.result !== "all") {
       out = out.filter((m) => {
-        const me = (m?.players || []).find((p) => String(idOf(p.user)) === myId) || null;
+        const me =
+          (m?.players || []).find((p) => String(idOf(p.user)) === myId) || null;
         return (me?.result || "") === filters.result;
       });
     }
@@ -91,7 +94,9 @@ export default function MatchesPage() {
               ? { ...p, confirmed: true, confirmedAt: new Date().toISOString() }
               : p
           );
-          const allConfirmed = players.length > 0 && players.every((p) => (p.user ? p.confirmed : true));
+          const allConfirmed =
+            players.length > 0 &&
+            players.every((p) => (p.user ? p.confirmed : true));
           return { ...m, players, matchStatus: allConfirmed ? "Confirmed" : "Pending" };
         })
       );
@@ -153,7 +158,8 @@ export default function MatchesPage() {
         <div
           className="mb-4 rounded-[var(--radius-standard)] border p-3 text-sm mx-auto max-w-lg"
           style={{
-            borderColor: "color-mix(in oklab, var(--color-warning) 40%, transparent)",
+            borderColor:
+              "color-mix(in oklab, var(--color-warning) 40%, transparent)",
             background: "color-mix(in oklab, var(--color-warning) 10%, white)",
             color: "var(--color-warning)",
           }}
@@ -165,7 +171,8 @@ export default function MatchesPage() {
         <div
           className="mb-4 rounded-[var(--radius-standard)] border p-3 text-sm mx-auto max-w-lg"
           style={{
-            borderColor: "color-mix(in oklab, var(--color-success) 40%, transparent)",
+            borderColor:
+              "color-mix(in oklab, var(--color-success) 40%, transparent)",
             background: "color-mix(in oklab, var(--color-success) 10%, white)",
           }}
         >
@@ -178,8 +185,22 @@ export default function MatchesPage() {
         <div className="grid gap-3 max-w-3xl mx-auto">
           {Array.from({ length: 4 }).map((_, i) => (
             <Card key={i} className="p-4">
-              <div className="h-4 w-32 bg-[--color-border-muted] rounded mb-2 animate-pulse" />
-              <div className="h-3 w-48 bg-[--color-border-muted] rounded animate-pulse" />
+              <div className="flex items-center justify-between mb-3">
+                <Skeleton variant="title" className="w-40" />
+                <Skeleton variant="text" className="w-24" />
+              </div>
+              <div className="flex items-center gap-2 mb-3">
+                <Skeleton className="w-16" />
+                <Skeleton className="w-20" />
+                <Skeleton className="w-24 ml-3" />
+                <Skeleton className="w-16" />
+              </div>
+              <div className="flex gap-2 mb-2">
+                <Skeleton className="w-20 h-6 rounded-full" />
+                <Skeleton className="w-20 h-6 rounded-full" />
+                <Skeleton className="w-24 h-6 rounded-full" />
+              </div>
+              <Skeleton variant="text" className="w-full" />
             </Card>
           ))}
         </div>
@@ -187,7 +208,11 @@ export default function MatchesPage() {
         <Card className="p-6 text-center max-w-2xl mx-auto">
           <p className="text-secondary">
             No matches found.{" "}
-            <Link to="/matches/new" className="underline" style={{ color: "var(--color-cta)" }}>
+            <Link
+              to="/matches/new"
+              className="underline"
+              style={{ color: "var(--color-cta)" }}
+            >
               Log your first one
             </Link>
             .
@@ -212,13 +237,18 @@ export default function MatchesPage() {
             const canRemind =
               m.matchStatus === "Pending" && amCreator && hasUnconfirmedOthers;
 
-            const myBadge = myResult !== "—"
-              ? (
-                  <span className={`px-2 py-0.5 rounded text-xs ${badgeClassForResult(myResult)}`}>
-                    {myResult}
-                  </span>
-                )
-              : <span>—</span>;
+            const myBadge =
+              myResult !== "—" ? (
+                <span
+                  className={`px-2 py-0.5 rounded text-xs ${badgeClassForResult(
+                    myResult
+                  )}`}
+                >
+                  {myResult}
+                </span>
+              ) : (
+                <span>—</span>
+              );
 
             return (
               <Card key={m._id} className="p-4">
@@ -264,7 +294,13 @@ export default function MatchesPage() {
                       <span
                         key={`${String(idOf(p.user)) || "guest"}-${idx}`}
                         className="inline-flex items-center gap-1 rounded-full border border-[--color-border-muted] px-2 py-0.5 text-xs"
-                        title={isGuest ? (amCreator ? "Guest • you can edit this player" : "Guest • read-only") : ""}
+                        title={
+                          isGuest
+                            ? amCreator
+                              ? "Guest • you can edit this player"
+                              : "Guest • read-only"
+                            : ""
+                        }
                       >
                         <span>{p.name || "Player"}</span>
                         {isGuest && (
@@ -273,9 +309,13 @@ export default function MatchesPage() {
                           </span>
                         )}
                         {p.confirmed ? (
-                          <span title="Confirmed" aria-label="Confirmed">✔︎</span>
+                          <span title="Confirmed" aria-label="Confirmed">
+                            ✔︎
+                          </span>
                         ) : (
-                          <span title="Pending" aria-label="Pending">⧗</span>
+                          <span title="Pending" aria-label="Pending">
+                            ⧗
+                          </span>
                         )}
                       </span>
                     );
@@ -283,7 +323,9 @@ export default function MatchesPage() {
                 </div>
 
                 {/* Notes */}
-                {m?.notes && <p className="text-sm text-secondary mt-2">{m.notes}</p>}
+                {m?.notes && (
+                  <p className="text-sm text-secondary mt-2">{m.notes}</p>
+                )}
 
                 {/* Actions */}
                 <div className="mt-3 flex gap-2">

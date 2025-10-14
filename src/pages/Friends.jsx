@@ -7,7 +7,7 @@ import Input from "../components/ui/Input";
 import { useAuth } from "../contexts/useAuth";
 import api from "../lib/axios";
 import FriendSearch from "../components/friends/FriendSearch";
-
+import Skeleton from "../components/ui/Skeleton";
 
 function UserRow({ user, right, subtitle }) {
   const name =
@@ -41,9 +41,9 @@ export default function FriendsPage() {
   const [err, setErr] = useState("");
 
   // data
-  const [friends, setFriends] = useState([]);     // /friends/list/:id
-  const [requests, setRequests] = useState([]);   // /friends/requests  [{ user, status }]
-  const [sent, setSent] = useState([]);           // /friends/sent      [{ user, status }]
+  const [friends, setFriends] = useState([]); // /friends/list/:id
+  const [requests, setRequests] = useState([]); // /friends/requests  [{ user, status }]
+  const [sent, setSent] = useState([]); // /friends/sent      [{ user, status }]
   const [suggested, setSuggested] = useState([]); // /friends/suggested
 
   // send-by-email form
@@ -90,7 +90,9 @@ export default function FriendsPage() {
       }
     }
     load();
-    return () => { ignore = true; };
+    return () => {
+      ignore = true;
+    };
   }, [tab, myId]);
 
   // counts shown on tabs
@@ -107,13 +109,11 @@ export default function FriendsPage() {
   // Actions
   const accept = async (senderId) => {
     try {
-      setErr(""); setOk("");
+      setErr("");
+      setOk("");
       await api.post("/friends/respond", { senderId, action: "Accepted" });
       setRequests((prev) => prev.filter((r) => r.user?._id !== senderId));
       setOk("Friend request accepted.");
-      // Optionally refresh friends list:
-      // const { data } = await api.get(`/friends/list/${myId}`);
-      // setFriends(data?.data || data || []);
     } catch (e) {
       setErr(e.message || "Failed to accept.");
     }
@@ -121,7 +121,8 @@ export default function FriendsPage() {
 
   const reject = async (senderId) => {
     try {
-      setErr(""); setOk("");
+      setErr("");
+      setOk("");
       await api.post("/friends/respond", { senderId, action: "Rejected" });
       setRequests((prev) => prev.filter((r) => r.user?._id !== senderId));
       setOk("Friend request rejected.");
@@ -132,7 +133,8 @@ export default function FriendsPage() {
 
   const unfriend = async (friendId) => {
     try {
-      setErr(""); setOk("");
+      setErr("");
+      setOk("");
       await api.post("/friends/unfriend", { friendId });
       setFriends((prev) => prev.filter((f) => f._id !== friendId));
       setOk("Removed from friends.");
@@ -146,11 +148,11 @@ export default function FriendsPage() {
     if (!targetEmail.trim()) return;
     try {
       setSending(true);
-      setErr(""); setOk("");
+      setErr("");
+      setOk("");
       await api.post("/friends/send", { email: targetEmail.trim() });
       setTargetEmail("");
       setOk("Friend request sent.");
-      // If you're on Sent tab, reflect immediately
       if (tab === "sent") {
         const res = await api.get("/friends/sent");
         setSent(res.data?.data || res.data || []);
@@ -165,9 +167,12 @@ export default function FriendsPage() {
   const addSuggested = async (u) => {
     if (!u?.email) return;
     try {
-      setErr(""); setOk("");
+      setErr("");
+      setOk("");
       await api.post("/friends/send", { email: u.email });
-      setOk(`Friend request sent to ${u.firstName || ""} ${u.lastName || ""}`.trim());
+      setOk(
+        `Friend request sent to ${u.firstName || ""} ${u.lastName || ""}`.trim()
+      );
       if (tab === "sent") {
         const res = await api.get("/friends/sent");
         setSent(res.data?.data || res.data || []);
@@ -199,18 +204,28 @@ export default function FriendsPage() {
 
       {/* Tabs */}
       <div className="flex flex-wrap items-center gap-2 justify-center mb-4">
-        <TabButton id="list">My Friends {counts.list ? `(${counts.list})` : ""}</TabButton>
-        <TabButton id="requests">Requests {counts.requests ? `(${counts.requests})` : ""}</TabButton>
-        <TabButton id="sent">Sent {counts.sent ? `(${counts.sent})` : ""}</TabButton>
-        <TabButton id="suggested">Suggested {counts.suggested ? `(${counts.suggested})` : ""}</TabButton>
+        <TabButton id="list">
+          My Friends {counts.list ? `(${counts.list})` : ""}
+        </TabButton>
+        <TabButton id="requests">
+          Requests {counts.requests ? `(${counts.requests})` : ""}
+        </TabButton>
+        <TabButton id="sent">
+          Sent {counts.sent ? `(${counts.sent})` : ""}
+        </TabButton>
+        <TabButton id="suggested">
+          Suggested {counts.suggested ? `(${counts.suggested})` : ""}
+        </TabButton>
       </div>
       <div className="mb-6">
-      <FriendSearch />
+        <FriendSearch />
       </div>
 
-
       {/* Quick send by email (visible on all tabs) */}
-      <form onSubmit={sendByEmail} className="mx-auto max-w-xl mb-4 grid grid-cols-[1fr_auto] gap-2 items-end">
+      <form
+        onSubmit={sendByEmail}
+        className="mx-auto max-w-xl mb-4 grid grid-cols-[1fr_auto] gap-2 items-end"
+      >
         <Input
           label="Send a friend request by email"
           type="email"
@@ -229,7 +244,8 @@ export default function FriendsPage() {
         <div
           className="mb-4 rounded-[var(--radius-standard)] border p-3 text-sm mx-auto max-w-xl"
           style={{
-            borderColor: "color-mix(in oklab, var(--color-warning) 40%, transparent)",
+            borderColor:
+              "color-mix(in oklab, var(--color-warning) 40%, transparent)",
             background: "color-mix(in oklab, var(--color-warning) 10%, white)",
             color: "var(--color-warning)",
           }}
@@ -241,7 +257,8 @@ export default function FriendsPage() {
         <div
           className="mb-4 rounded-[var(--radius-standard)] border p-3 text-sm mx-auto max-w-xl"
           style={{
-            borderColor: "color-mix(in oklab, var(--color-success) 40%, transparent)",
+            borderColor:
+              "color-mix(in oklab, var(--color-success) 40%, transparent)",
             background: "color-mix(in oklab, var(--color-success) 10%, white)",
           }}
         >
@@ -252,12 +269,22 @@ export default function FriendsPage() {
       {/* Content per tab */}
       <div className="grid gap-3 max-w-3xl mx-auto">
         {loading ? (
-          Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i} className="p-4">
-              <div className="h-4 w-40 bg-[--color-border-muted] rounded mb-2 animate-pulse" />
-              <div className="h-3 w-56 bg-[--color-border-muted] rounded animate-pulse" />
-            </Card>
-          ))
+          <div className="grid gap-3 max-w-3xl mx-auto">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Card key={i} className="p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 flex-1">
+                    <Skeleton variant="avatar" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="w-32" />
+                      <Skeleton variant="text" className="w-48" />
+                    </div>
+                  </div>
+                  <Skeleton variant="button" className="w-24" />
+                </div>
+              </Card>
+            ))}
+          </div>
         ) : tab === "list" ? (
           friends.length === 0 ? (
             <Card className="p-6 text-center">
@@ -310,28 +337,29 @@ export default function FriendsPage() {
                 key={r?.user?._id}
                 user={r.user}
                 subtitle={`Status: ${r.status || "Pending"}`}
-                right={null /* add Cancel here later if you add a cancel endpoint */}
+                right={null}
               />
             ))
           )
+        ) : suggested.length === 0 ? (
+          <Card className="p-6 text-center">
+            <p className="text-secondary">No suggestions right now.</p>
+          </Card>
         ) : (
-          // suggested
-          (suggested.length === 0 ? (
-            <Card className="p-6 text-center">
-              <p className="text-secondary">No suggestions right now.</p>
-            </Card>
-          ) : (
-            suggested.map((u) => (
-              <UserRow
-                key={u._id}
-                user={u}
-                right={
-                  <Button className="btn-sm" onClick={() => addSuggested(u)} disabled={!u.email}>
-                    Add friend
-                  </Button>
-                }
-              />
-            ))
+          suggested.map((u) => (
+            <UserRow
+              key={u._id}
+              user={u}
+              right={
+                <Button
+                  className="btn-sm"
+                  onClick={() => addSuggested(u)}
+                  disabled={!u.email}
+                >
+                  Add friend
+                </Button>
+              }
+            />
           ))
         )}
       </div>

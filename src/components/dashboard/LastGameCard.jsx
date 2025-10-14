@@ -1,42 +1,45 @@
 import Card from "../ui/Card";
+import Skeleton from "../ui/Skeleton";
 
-export default function LastGameCard({ match, loading }) {
+export default function StatsCard({ stats, loading }) {
   if (loading) {
     return (
       <Card className="p-4">
-        <div className="h-4 w-32 bg-[--color-border-muted] rounded mb-3 animate-pulse" />
-        <div className="space-y-2">
-          <div className="h-3 w-48 bg-[--color-border-muted] rounded animate-pulse" />
-          <div className="h-3 w-40 bg-[--color-border-muted] rounded animate-pulse" />
-          <div className="h-3 w-24 bg-[--color-border-muted] rounded animate-pulse" />
+        <Skeleton variant="title" className="w-24 mb-4 mx-auto" />
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+            <Skeleton className="w-28" />
+            <Skeleton className="w-12" />
+          </div>
+          <div className="flex justify-between items-center">
+            <Skeleton className="w-32" />
+            <Skeleton className="w-12" />
+          </div>
+          <div className="flex justify-between items-center">
+            <Skeleton className="w-36" />
+            <Skeleton className="w-20" />
+          </div>
         </div>
       </Card>
     );
   }
 
-  if (!match) {
-    return (
-      <Card className="p-4 text-center">
-        <h3 className="text-sm font-semibold mb-2">Your last game</h3>
-        <p className="text-secondary text-sm">No matches yet. Log your first one.</p>
-      </Card>
-    );
-  }
-
-  const gameName = match?.game?.name || "Game";
-  const date = match?.date ? new Date(match.date).toLocaleDateString() : "";
-  const you = match?.players?.find(p => p?.user) || match?.players?.[0];
-  const result = you?.result || "";
+  const wins = stats?.wins ?? 0;
+  const losses = stats?.losses ?? 0;
+  const mostPlayed = stats?.mostPlayed || "—";
 
   return (
-    <Card className="p-4">
-      <h3 className="text-sm font-semibold mb-3 text-center">Your last game</h3>
-      <div className="grid grid-cols-[48px_1fr] gap-3 items-center">
-        <div className="h-12 w-12 rounded bg-[--color-border-muted]/60" />
-        <div className="text-sm">
-          <div><span className="font-medium">Game:</span> {gameName}</div>
-          <div><span className="font-medium">Date:</span> {date}</div>
-          <div><span className="font-medium">Result:</span> {result}</div>
+    <Card className="p-4 text-center">
+      <h3 className="text-sm font-semibold mb-3">Your Stats</h3>
+      <div className="text-sm space-y-1">
+        <div>
+          <span className="font-medium">Total Wins:</span> {wins}
+        </div>
+        <div>
+          <span className="font-medium">Total Losses:</span> {losses}
+        </div>
+        <div>
+          <span className="font-medium">Most Played:</span> {mostPlayed}
         </div>
       </div>
     </Card>

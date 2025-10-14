@@ -1,19 +1,20 @@
-
 import { useEffect, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import logo from "../../assets/logo.png";
 import { useAuth } from "../../contexts/useAuth";
 import { fetchNotifications } from "../../lib/api/notifications";
- 
- const links = [
-   { to: "/dashboard", label: "Dashboard" },
-   { to: "/matches", label: "Matches" },
-   { to: "/friends", label: "Friends" },
-   { to: "/profile/me", label: "Profile" },
- ];
- 
- export default function SideNav() {
-   const { logout } = useAuth();
+import { MdDashboard, MdSportsEsports, MdPeople, MdPerson, MdNotifications } from "react-icons/md";
+
+
+const links = [
+  { to: "/dashboard", label: "Dashboard", icon: <MdDashboard size={20} /> },
+  { to: "/matches", label: "Matches", icon: <MdSportsEsports size={20} /> },
+  { to: "/friends", label: "Friends", icon: <MdPeople size={20} /> },
+  { to: "/profile/me", label: "Profile", icon: <MdPerson size={20} /> },
+];
+
+export default function SideNav() {
+  const { logout } = useAuth();
   const [unread, setUnread] = useState(0);
 
   useEffect(() => {
@@ -36,57 +37,89 @@ import { fetchNotifications } from "../../lib/api/notifications";
     document.addEventListener("visibilitychange", onVis);
     return () => { mounted = false; document.removeEventListener("visibilitychange", onVis); };
   }, []);
- 
-   return (
-     <aside className="hidden md:flex h-[90vh] min-w-56 flex-col justify-between pt-8 pl-4 pr-4">
-       <div>
-         <Link to="/dashboard" className="mb-8 inline-block">
-           <img src={logo} alt="Game Tracker" className="h-20 w-auto" title="Home" />
-         </Link>
- 
-         <nav className="flex flex-col gap-8">
-           {links.map((link) => (
-             <NavLink
-               key={link.to}
-               to={link.to}
-               className={({ isActive }) =>
-                 `${isActive ? "text-[--color-cta] font-semibold" : "text-secondary"} text-sm`
-               }
-             >
-               {link.label}
-             </NavLink>
-           ))}
-          {/* Notifications link with unread badge */}
-          <NavLink
+
+  return (
+    <aside 
+      className="hidden md:flex h-[90vh] min-w-64 flex-col justify-between pt-8 px-4 rounded-2xl shadow-card"
+      style={{
+        background: "var(--color-card)",
+        border: "1px solid color-mix(in oklab, var(--color-border-muted) 40%, transparent)"
+      }}
+    >
+      <div>
+        {/* Logo */}
+        <Link 
+          to="/dashboard" 
+          className="mb-10 inline-block transition-transform hover:scale-105"
+        >
+          <img src={logo} alt="Game Tracker" className="h-20 w-auto" title="Home" />
+        </Link>
+
+        {/* Navigation Links */}
+        <nav className="flex flex-col gap-2">
+          {links.map((link) => (
+            <NavLink
+              key={link.to}
+              to={link.to}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  isActive
+                    ? "bg-[color-mix(in_oklab,var(--color-cta)_12%,white)] text-[var(--color-cta)] shadow-sm"
+                    : "text-[var(--color-secondary)] hover:bg-[color-mix(in_oklab,var(--color-border-muted)_25%,white)] hover:text-[var(--color-primary)]"
+                }`
+              }
+            >
+              {link.icon}
+              <span>{link.label}</span>
+            </NavLink>
+          ))}
+
+        {/* Notifications Link with Badge */}
+<NavLink
             to="/notifications"
             aria-label="Notifications"
             className={({ isActive }) =>
-              `relative ${isActive ? "text-[--color-cta] font-semibold" : "text-secondary"} text-sm`
+              `relative flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                isActive
+                  ? "bg-[color-mix(in_oklab,var(--color-cta)_12%,white)] text-[var(--color-cta)] shadow-sm"
+                  : "text-[var(--color-secondary)] hover:bg-[color-mix(in_oklab,var(--color-border-muted)_25%,white)] hover:text-[var(--color-primary)]"
+              }`
             }
           >
-            <span className="inline-flex items-center gap-2">
-            Notifications
-            </span>
+            <MdNotifications size={20} />
+            <span>Notifications</span>
             {unread > 0 && (
               <span
                 aria-label={`${unread} unread notifications`}
-                className="absolute -right-3 -top-2 inline-flex items-center justify-center text-[10px] rounded-full px-2 py-0.5 bg-[var(--color-cta)] text-white"
+                className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold rounded-full bg-[var(--color-warning)] text-white"
               >
-                {unread > 99 ? "99+" : unread}
+                {unread > 9 ? "9+" : unread}
               </span>
             )}
           </NavLink>
-         </nav>
-       </div>
- 
-       <div className="mb-6">
-         <button
-           onClick={logout}
-           className="btn-sm btn-primary text-sm py-2 px-3 w-1/2 justify-center"
-         >
-           Logout
-         </button>
-       </div>
-     </aside>
-   );
- }
+        </nav>
+      </div>
+
+      {/* Logout Button */}
+      <div className="mb-6">
+        <button
+          onClick={logout}
+          className="btn w-full justify-center text-sm py-3 transition-all duration-200"
+          style={{
+            background: "color-mix(in oklab, var(--color-warning) 10%, white)",
+            color: "var(--color-warning)",
+            border: "1px solid color-mix(in oklab, var(--color-warning) 30%, transparent)"
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "color-mix(in oklab, var(--color-warning) 15%, white)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "color-mix(in oklab, var(--color-warning) 10%, white)";
+          }}
+        >
+          Logout
+        </button>
+      </div>
+    </aside>
+  );
+}
