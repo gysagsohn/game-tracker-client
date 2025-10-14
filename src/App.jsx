@@ -20,44 +20,47 @@ import ProfilePage from "./pages/Profile";
 import ResetPasswordPage from "./pages/ResetPassword";
 import Signup from "./pages/Signup";
 import VerifyEmailPage from "./pages/VerifyEmail";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 export default function App() {
   return (
     <ToastProvider>
       <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            {/* Public */}
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/oauth-success" element={<OAuthSuccess />} />
-            <Route path="/verify-email" element={<VerifyEmailPage />} />
-            <Route path="/check-email" element={<CheckEmailPage />} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <ErrorBoundary>
+          <BrowserRouter>
+            <Routes>
+              {/* Public */}
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/oauth-success" element={<OAuthSuccess />} />
+              <Route path="/verify-email" element={<VerifyEmailPage />} />
+              <Route path="/check-email" element={<CheckEmailPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
 
 
-            {/* Private */}
-            <Route element={<ProtectedRoute />}>
-              <Route element={<AuthedShell />}>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/matches" element={<MatchesPage />} />
-                <Route path="/matches/:id" element={<MatchDetail />} />
-                <Route path="/matches/new" element={<NewMatchPage />} />
-                <Route path="/games/new" element={<AddGamePage />} />
-                <Route path="/friends" element={<FriendsPage />} />   
-                <Route path="/friends/requests" element={<FriendRequestsPage />} />
-                <Route path="/profile/me" element={<ProfilePage />} />
-                <Route path="/notifications" element={<NotificationsPage />} />
-                {/* TODO: /matches/new, /matches, /profile/:id */}
+              {/* Private */}
+              <Route element={<ProtectedRoute />}>
+                <Route element={<AuthedShell />}>
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/matches" element={<MatchesPage />} />
+                  <Route path="/matches/:id" element={<MatchDetail />} />
+                  <Route path="/matches/new" element={<NewMatchPage />} />
+                  <Route path="/games/new" element={<AddGamePage />} />
+                  <Route path="/friends" element={<FriendsPage />} />   
+                  <Route path="/friends/requests" element={<FriendRequestsPage />} />
+                  <Route path="/profile/me" element={<ProfilePage />} />
+                  <Route path="/notifications" element={<NotificationsPage />} />
+                  {/* TODO: /matches/new, /matches, /profile/:id */}
+                </Route>
               </Route>
-            </Route>
 
-            {/* 404 */}
-            <Route path="*" element={<div className="p-6">Not Found</div>} />
-          </Routes>
-        </BrowserRouter>
+              {/* 404 */}
+              <Route path="*" element={<div className="p-6">Not Found</div>} />
+            </Routes>
+          </BrowserRouter>
+        </ErrorBoundary> 
       </AuthProvider>
     </ToastProvider>
   );
