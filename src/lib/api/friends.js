@@ -1,4 +1,3 @@
-// src/lib/api/friends.js
 import api from '../axios';
 
 export async function respondFriendRequest(senderId, action /* "Accepted" | "Rejected" */) {

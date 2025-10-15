@@ -1,4 +1,3 @@
-// src/contexts/AuthProvider.jsx
 import { useCallback, useEffect, useState } from "react";
 import { AuthContext } from "./AuthContextBase";
 

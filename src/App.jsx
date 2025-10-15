@@ -1,4 +1,3 @@
-// src/App.jsx
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import AuthedShell from "./components/AuthedShell";
 import ProtectedRoute from "./components/ProtectedRoute";

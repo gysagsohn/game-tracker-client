@@ -1,4 +1,3 @@
-// src/pages/Friends.jsx
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import Button from "../components/ui/Button";

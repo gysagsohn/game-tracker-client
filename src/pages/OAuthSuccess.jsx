@@ -1,4 +1,3 @@
-// src/pages/OAuthSuccess.jsx
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 

@@ -1,4 +1,3 @@
-// src/lib/api/notifications.js
 import api from '../axios';
 
 export async function fetchNotifications({ status = 'all', page = 1, limit = 20 } = {}) {
