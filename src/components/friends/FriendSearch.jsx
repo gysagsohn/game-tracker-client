@@ -74,11 +74,11 @@ export default function FriendSearch() {
 
   return (
     <Card className="p-4 max-w-2xl mx-auto">
-      <h3 className="text-sm font-semibold mb-3">Find Friends</h3>
+      <h3 className="text-sm font-semibold mb-3 text-center">Find Friends</h3>
       
       <input
         type="text"
-        className="input mb-3"
+        className="input mb-3 text-center"
         placeholder="Search by name or email..."
         value={query}
         onChange={handleQueryChange}

@@ -1,4 +1,3 @@
-// src/pages/Notifications.jsx
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useToast } from '../contexts/useToast.js';
@@ -9,21 +8,31 @@ import {
   markNotificationRead,
 } from '../lib/api/notifications.js';
 import { confirmSession, declineSession } from '../lib/api/sessions.js';
+import {
+  MdPersonAdd,
+  MdCheckCircle,
+  MdSportsEsports,
+  MdAlarm,
+  MdEdit,
+  MdFlag,
+  MdBlock,
+  MdNotifications as MdBell
+} from "react-icons/md";
 
 function classNames(...xs) {
   return xs.filter(Boolean).join(' ');
 }
 
 const TYPE_ICON = {
-  FRIEND_REQUEST: '👋',
-  FRIEND_ACCEPTED: '✅',
-  FRIEND_ACCEPT: '✅',
-  MATCH_INVITE: '🎮',
-  MATCH_REMINDER: '⏰',
-  MATCH_UPDATED: '✏️',
-  MATCH_CONFIRMED: '🏁',
-  MATCH_DECLINED: '🚫',
-  DEFAULT: '🔔',
+  FRIEND_REQUEST: <MdPersonAdd size={20} />,
+  FRIEND_ACCEPTED: <MdCheckCircle size={20} />,
+  FRIEND_ACCEPT: <MdCheckCircle size={20} />,
+  MATCH_INVITE: <MdSportsEsports size={20} />,
+  MATCH_REMINDER: <MdAlarm size={20} />,
+  MATCH_UPDATED: <MdEdit size={20} />,
+  MATCH_CONFIRMED: <MdFlag size={20} />,
+  MATCH_DECLINED: <MdBlock size={20} />,
+  DEFAULT: <MdBell size={20} />,
 };
 
 function timeAgo(iso) {
@@ -176,17 +185,23 @@ export default function NotificationsPage() {
 
   return (
     <div className="max-w-3xl mx-auto p-4 sm:p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-semibold">Notifications</h1>
-        <button
-          onClick={onMarkAllRead}
-          className="btn btn-primary disabled:opacity-60"
-          disabled={markingAll || (meta.unreadCount ?? 0) === 0}
-          aria-disabled={markingAll || (meta.unreadCount ?? 0) === 0}
-        >
-          {markingAll ? 'Marking…' : 'Mark all read'}
-        </button>
+      <div className="max-w-3xl mx-auto mb-6 lg:mb-10 px-1
+                      flex flex-col items-center
+                      md:grid md:grid-cols-[1fr_auto_1fr] md:items-center">
+        <h1 className="h1 text-center md:col-span-3">Notifications</h1>
+
+        <div className="mt-2 md:mt-0 md:ml-4 md:col-start-3 md:justify-self-end">
+          <button
+            onClick={onMarkAllRead}
+            className="btn btn-primary md:btn disabled:opacity-60"
+            disabled={markingAll || (meta.unreadCount ?? 0) === 0}
+            aria-disabled={markingAll || (meta.unreadCount ?? 0) === 0}
+          >
+            {markingAll ? "Marking…" : "Mark all read"}
+          </button>
+        </div>
       </div>
+
 
       <div className="mb-3 flex gap-2">
         <button
@@ -265,7 +280,9 @@ export default function NotificationsPage() {
                 key={n._id}
                 className={classNames('p-4 flex items-start gap-3', n.isRead ? 'opacity-70' : '')}
               >
-                <div className="text-xl leading-none">{icon}</div>
+                <div className="leading-none shrink-0 text-[var(--color-secondary)]">
+                {icon}
+                </div>
                 <div className="flex-1 min-w-0 max-h-48 overflow-auto pr-1">
                   <div className="flex items-center gap-2">
                     <p className="font-medium text-[var(--color-primary)] truncate">{title}</p>

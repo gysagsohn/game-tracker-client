@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import logo from "../../assets/logo.png";
-import { useAuth } from "../../contexts/useAuth";
 import { fetchNotifications } from "../../lib/api/notifications";
 import { MdDashboard, MdSportsEsports, MdPeople, MdPerson, MdNotifications } from "react-icons/md";
+import LogoutButton from "../ui/LogoutButton";
 
 
 const links = [
@@ -14,7 +14,6 @@ const links = [
 ];
 
 export default function SideNav() {
-  const { logout } = useAuth();
   const [unread, setUnread] = useState(0);
 
   useEffect(() => {
@@ -75,7 +74,7 @@ export default function SideNav() {
           ))}
 
         {/* Notifications Link with Badge */}
-<NavLink
+          <NavLink
             to="/notifications"
             aria-label="Notifications"
             className={({ isActive }) =>
@@ -102,23 +101,7 @@ export default function SideNav() {
 
       {/* Logout Button */}
       <div className="mb-6">
-        <button
-          onClick={logout}
-          className="btn w-full justify-center text-sm py-3 transition-all duration-200"
-          style={{
-            background: "color-mix(in oklab, var(--color-warning) 10%, white)",
-            color: "var(--color-warning)",
-            border: "1px solid color-mix(in oklab, var(--color-warning) 30%, transparent)"
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = "color-mix(in oklab, var(--color-warning) 15%, white)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = "color-mix(in oklab, var(--color-warning) 10%, white)";
-          }}
-        >
-          Logout
-        </button>
+        <LogoutButton fullWidth />
       </div>
     </aside>
   );

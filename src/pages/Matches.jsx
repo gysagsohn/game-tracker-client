@@ -126,11 +126,18 @@ export default function MatchesPage() {
   return (
     <main className="py-2 lg:py-6">
       {/* Header with "+ New Match" button */}
-      <div className="flex items-center justify-between max-w-3xl mx-auto mb-6 lg:mb-10 px-1">
-        <h1 className="h1">Match History</h1>
-        <Link to="/matches/new" className="btn btn-primary btn-sm md:btn">
-          + New Match
-        </Link>
+      <div className="max-w-3xl mx-auto mb-6 lg:mb-10 px-1
+                      flex flex-col items-center
+                      md:grid md:grid-cols-[1fr_auto_1fr] md:items-center">
+        {/* Centered title; spans on md */}
+        <h1 className="h1 text-center md:col-span-3">Match History</h1>
+
+        {/* Action: small gap under title on mobile; none on md */}
+        <div className="mt-2 md:mt-0 md:col-start-3 md:justify-self-end">
+          <Link to="/matches/new" className="btn btn-primary md:btn">
+            + New Match
+          </Link>
+        </div>
       </div>
 
       {/* Filters */}

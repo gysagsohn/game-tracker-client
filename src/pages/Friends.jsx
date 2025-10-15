@@ -15,7 +15,7 @@ function UserRow({ user, right, subtitle }) {
     user?.email ||
     "User";
   return (
-    <div className="flex items-center justify-between gap-3 border border-[--color-border-muted] rounded-[var(--radius-standard)] p-2">
+    <div className="flex items-center justify-between gap-3 border border-[--color-border-muted] rounded-[var(--radius-standard)] p-4 bg-white shadow-sm">
       <div className="min-w-0">
         <div className="text-sm font-medium truncate">{name}</div>
         {(user?.email || subtitle) && (
@@ -41,10 +41,10 @@ export default function FriendsPage() {
   const [err, setErr] = useState("");
 
   // data
-  const [friends, setFriends] = useState([]); // /friends/list/:id
-  const [requests, setRequests] = useState([]); // /friends/requests  [{ user, status }]
-  const [sent, setSent] = useState([]); // /friends/sent      [{ user, status }]
-  const [suggested, setSuggested] = useState([]); // /friends/suggested
+  const [friends, setFriends] = useState([]);
+  const [requests, setRequests] = useState([]);
+  const [sent, setSent] = useState([]);
+  const [suggested, setSuggested] = useState([]);
 
   // send-by-email form
   const [targetEmail, setTargetEmail] = useState("");
@@ -56,7 +56,6 @@ export default function FriendsPage() {
     setParams(nextParams, { replace: true });
   };
 
-  // Load data for the current tab
   useEffect(() => {
     let ignore = false;
     async function load() {
@@ -75,7 +74,7 @@ export default function FriendsPage() {
           const payload = res.data?.data || res.data || [];
           if (!ignore) setRequests(Array.isArray(payload) ? payload : []);
         } else if (tab === "sent") {
-          const res = await api.get("/friends/sent"); // Pending by default
+          const res = await api.get("/friends/sent");
           const payload = res.data?.data || res.data || [];
           if (!ignore) setSent(Array.isArray(payload) ? payload : []);
         } else if (tab === "suggested") {
@@ -90,12 +89,9 @@ export default function FriendsPage() {
       }
     }
     load();
-    return () => {
-      ignore = true;
-    };
+    return () => { ignore = true; };
   }, [tab, myId]);
 
-  // counts shown on tabs
   const counts = useMemo(
     () => ({
       list: friends.length,
@@ -106,41 +102,31 @@ export default function FriendsPage() {
     [friends.length, requests.length, sent.length, suggested.length]
   );
 
-  // Actions
   const accept = async (senderId) => {
     try {
-      setErr("");
-      setOk("");
+      setErr(""); setOk("");
       await api.post("/friends/respond", { senderId, action: "Accepted" });
       setRequests((prev) => prev.filter((r) => r.user?._id !== senderId));
       setOk("Friend request accepted.");
-    } catch (e) {
-      setErr(e.message || "Failed to accept.");
-    }
+    } catch (e) { setErr(e.message || "Failed to accept."); }
   };
 
   const reject = async (senderId) => {
     try {
-      setErr("");
-      setOk("");
+      setErr(""); setOk("");
       await api.post("/friends/respond", { senderId, action: "Rejected" });
       setRequests((prev) => prev.filter((r) => r.user?._id !== senderId));
       setOk("Friend request rejected.");
-    } catch (e) {
-      setErr(e.message || "Failed to reject.");
-    }
+    } catch (e) { setErr(e.message || "Failed to reject."); }
   };
 
   const unfriend = async (friendId) => {
     try {
-      setErr("");
-      setOk("");
+      setErr(""); setOk("");
       await api.post("/friends/unfriend", { friendId });
       setFriends((prev) => prev.filter((f) => f._id !== friendId));
       setOk("Removed from friends.");
-    } catch (e) {
-      setErr(e.message || "Failed to unfriend.");
-    }
+    } catch (e) { setErr(e.message || "Failed to unfriend."); }
   };
 
   const sendByEmail = async (e) => {
@@ -148,8 +134,7 @@ export default function FriendsPage() {
     if (!targetEmail.trim()) return;
     try {
       setSending(true);
-      setErr("");
-      setOk("");
+      setErr(""); setOk("");
       await api.post("/friends/send", { email: targetEmail.trim() });
       setTargetEmail("");
       setOk("Friend request sent.");
@@ -167,12 +152,9 @@ export default function FriendsPage() {
   const addSuggested = async (u) => {
     if (!u?.email) return;
     try {
-      setErr("");
-      setOk("");
+      setErr(""); setOk("");
       await api.post("/friends/send", { email: u.email });
-      setOk(
-        `Friend request sent to ${u.firstName || ""} ${u.lastName || ""}`.trim()
-      );
+      setOk(`Friend request sent to ${u.firstName || ""} ${u.lastName || ""}`.trim());
       if (tab === "sent") {
         const res = await api.get("/friends/sent");
         setSent(res.data?.data || res.data || []);
@@ -182,74 +164,75 @@ export default function FriendsPage() {
     }
   };
 
-  // UI helpers
-  const TabButton = ({ id, children }) => (
+const TabButton = ({ id, children }) => {
+  const isActive = tab === id;
+  return (
     <button
       type="button"
       onClick={() => setTab(id)}
-      className={`px-3 py-2 rounded-[var(--radius-standard)] text-sm ${
-        tab === id
-          ? "bg-[color-mix(in_oklab,var(--color-border-muted)_25%,white)]"
-          : "hover:bg-[color-mix(in_oklab,var(--color-border-muted)_20%,white)]"
-      }`}
-      aria-current={tab === id ? "page" : undefined}
+      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
+        ${isActive
+          ? "bg-[color-mix(in_oklab,var(--color-cta)_10%,transparent)] text-[var(--color-cta)] shadow-sm"
+          : "text-[var(--color-secondary)] hover:bg-[color-mix(in_oklab,var(--color-border-muted)_25%,transparent)] hover:text-[var(--color-primary)]"
+        }`}
     >
       {children}
     </button>
   );
+};
 
   return (
     <main className="py-2 lg:py-6">
       <h1 className="h1 text-center mb-6 lg:mb-10">Friends</h1>
 
       {/* Tabs */}
-      <div className="flex flex-wrap items-center gap-2 justify-center mb-4">
-        <TabButton id="list">
-          My Friends {counts.list ? `(${counts.list})` : ""}
-        </TabButton>
-        <TabButton id="requests">
-          Requests {counts.requests ? `(${counts.requests})` : ""}
-        </TabButton>
-        <TabButton id="sent">
-          Sent {counts.sent ? `(${counts.sent})` : ""}
-        </TabButton>
-        <TabButton id="suggested">
-          Suggested {counts.suggested ? `(${counts.suggested})` : ""}
-        </TabButton>
+      <div
+        className="flex flex-wrap items-center justify-center gap-1.5 md:gap-2 mb-4"
+        role="tablist"
+      >
+        <TabButton id="list">My Friends {counts.list ? `(${counts.list})` : ""}</TabButton>
+        <TabButton id="requests">Requests {counts.requests ? `(${counts.requests})` : ""}</TabButton>
+        <TabButton id="sent">Sent {counts.sent ? `(${counts.sent})` : ""}</TabButton>
+        <TabButton id="suggested">Suggested {counts.suggested ? `(${counts.suggested})` : ""}</TabButton>
       </div>
+
+      {/* Find Friends */}
       <div className="mb-6">
         <FriendSearch />
       </div>
 
-      {/* Quick send by email (visible on all tabs) */}
-      <Card className="p-4 max-w-xl mx-auto mb-6">
-      <h3 className="text-sm font-semibold mb-3">Send Friend Request</h3>
-      <form onSubmit={sendByEmail} className="flex flex-col sm:flex-row gap-3 items-end">
-        <Input
-          type="email"
-          placeholder="friend@example.com"
-          value={targetEmail}
-          onChange={(e) => setTargetEmail(e.target.value)}
-          required
-          wrapperClassName="flex-1"
-        />
-        <Button 
-          type="submit" 
-          disabled={sending}
-          className="w-full sm:w-auto shrink-0"
+      {/* Send Friend Request (email) — full width card, centered content */}
+      <Card className="w-full max-w-2xl mx-auto mb-6 p-5">
+        <h3 className="text-sm font-semibold text-center mb-4">Send Friend Request</h3>
+        <form
+          onSubmit={sendByEmail}
+          className="flex flex-col sm:flex-row gap-3 sm:items-stretch"
         >
-          {sending ? "Sending…" : "Send"}
-        </Button>
-      </form>
-    </Card>
+          <Input
+            type="email"
+            placeholder="friend@example.com"
+            value={targetEmail}
+            onChange={(e) => setTargetEmail(e.target.value)}
+            required
+            wrapperClassName="flex-1"
+            className="w-full text-center"
+          />
+          <Button
+            type="submit"
+            disabled={sending}
+            className="w-full sm:w-auto sm:min-w-[110px]"
+          >
+            {sending ? "Sending…" : "Send"}
+          </Button>
+        </form>
+      </Card>
 
       {/* Feedback banners */}
       {err && (
         <div
           className="mb-4 rounded-[var(--radius-standard)] border p-3 text-sm mx-auto max-w-xl"
           style={{
-            borderColor:
-              "color-mix(in oklab, var(--color-warning) 40%, transparent)",
+            borderColor: "color-mix(in oklab, var(--color-warning) 40%, transparent)",
             background: "color-mix(in oklab, var(--color-warning) 10%, white)",
             color: "var(--color-warning)",
           }}
@@ -261,8 +244,7 @@ export default function FriendsPage() {
         <div
           className="mb-4 rounded-[var(--radius-standard)] border p-3 text-sm mx-auto max-w-xl"
           style={{
-            borderColor:
-              "color-mix(in oklab, var(--color-success) 40%, transparent)",
+            borderColor: "color-mix(in oklab, var(--color-success) 40%, transparent)",
             background: "color-mix(in oklab, var(--color-success) 10%, white)",
           }}
         >

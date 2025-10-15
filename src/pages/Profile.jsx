@@ -6,6 +6,7 @@ import Input from "../components/ui/Input";
 import { useAuth } from "../contexts/useAuth";
 import { useToast } from "../contexts/useToast";
 import api from "../lib/axios";
+import LogoutButton from "../components/ui/LogoutButton";
 
 export default function ProfilePage() {
   const { user, logout } = useAuth();
@@ -357,10 +358,8 @@ export default function ProfilePage() {
         </Card>
 
         {/* Logout Button */}
-        <div className="text-center">
-          <button onClick={logout} className="btn">
-            Logout
-          </button>
+        <div className="mb-6">
+          <LogoutButton />
         </div>
       </div>
 
