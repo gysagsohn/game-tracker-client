@@ -258,7 +258,7 @@ export default function NewMatchPage() {
         <form onSubmit={onSubmit} className="grid gap-5">
           {/* Game + helper link */}
           <div>
-            <GameSelect value={game} onChange={setGame} />
+            <GameSelect value={game} onChange={setGame} allowCreate={true} />
             <div className="mt-1">
               <Link
                 to="/games/new"

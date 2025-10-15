@@ -222,22 +222,26 @@ export default function FriendsPage() {
       </div>
 
       {/* Quick send by email (visible on all tabs) */}
-      <form
-        onSubmit={sendByEmail}
-        className="mx-auto max-w-xl mb-4 grid grid-cols-[1fr_auto] gap-2 items-end"
-      >
+      <Card className="p-4 max-w-xl mx-auto mb-6">
+      <h3 className="text-sm font-semibold mb-3">Send Friend Request</h3>
+      <form onSubmit={sendByEmail} className="flex flex-col sm:flex-row gap-3 items-end">
         <Input
-          label="Send a friend request by email"
           type="email"
           placeholder="friend@example.com"
           value={targetEmail}
           onChange={(e) => setTargetEmail(e.target.value)}
           required
+          wrapperClassName="flex-1"
         />
-        <Button type="submit" disabled={sending} className="btn-sm">
+        <Button 
+          type="submit" 
+          disabled={sending}
+          className="w-full sm:w-auto shrink-0"
+        >
           {sending ? "Sending…" : "Send"}
         </Button>
       </form>
+    </Card>
 
       {/* Feedback banners */}
       {err && (
