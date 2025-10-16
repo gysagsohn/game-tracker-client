@@ -188,8 +188,8 @@ export default function PlayersField({ me, value = [], onChange }) {
                   <span
                     className={`text-xs px-2 py-0.5 rounded ${
                       p.confirmed
-                        ? "bg-[color-mix(in_oklab,var(--color-success)_15%,white)]"
-                        : "bg-[color-mix(in_oklab,var(--color-border-muted)_35%,white)]"
+                        ? "bg-[color-mix(in oklab,var(--color-success)_15%,white)]"
+                        : "bg-[color-mix(in oklab,var(--color-border-muted)_35%,white)]"
                     }`}
                     title={p.confirmed ? "Confirmed" : "Pending"}
                   >

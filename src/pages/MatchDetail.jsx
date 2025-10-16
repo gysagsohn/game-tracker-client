@@ -1,4 +1,3 @@
-// src/pages/MatchDetail.jsx
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import ActivityLog from "../components/matches/ActivityLog";

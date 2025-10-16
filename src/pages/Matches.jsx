@@ -16,11 +16,11 @@ function idOf(v) {
 function badgeClassForResult(r) {
   switch (r) {
     case "Win":
-      return "bg-[color-mix(in_oklab,var(--color-success)_18%,white)]";
+      return "bg-[color-mix(in oklab,var(--color-success)_18%,white)]";
     case "Loss":
-      return "bg-[color-mix(in_oklab,var(--color-warning)_18%,white)]";
+      return "bg-[color-mix(in oklab,var(--color-warning)_18%,white)]";
     case "Draw":
-      return "bg-[color-mix(in_oklab,var(--color-border-muted)_40%,white)]";
+      return "bg-[color-mix(in oklab,var(--color-border-muted)_40%,white)]";
     default:
       return "";
   }
@@ -281,8 +281,8 @@ export default function MatchesPage() {
                   <span
                     className={`px-2 py-0.5 rounded text-xs ${
                       m.matchStatus === "Confirmed"
-                        ? "bg-[color-mix(in_oklab,var(--color-success)_15%,white)]"
-                        : "bg-[color-mix(in_oklab,var(--color-border-muted)_35%,white)]"
+                        ? "bg-[color-mix(in oklab,var(--color-success)_15%,white)]"
+                        : "bg-[color-mix(in oklab,var(--color-border-muted)_35%,white)]"
                     }`}
                   >
                     {m.matchStatus || "Pending"}
@@ -311,7 +311,7 @@ export default function MatchesPage() {
                       >
                         <span>{p.name || "Player"}</span>
                         {isGuest && (
-                          <span className="ml-1 px-1 rounded bg-[color-mix(in_oklab,var(--color-border-muted)_35%,white)]">
+                          <span className="ml-1 px-1 rounded bg-[color-mix(in oklab,var(--color-border-muted)_35%,white)]">
                             Guest {guestIcon}
                           </span>
                         )}

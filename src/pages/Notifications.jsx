@@ -310,7 +310,7 @@ export default function NotificationsPage() {
                         <button
                           onClick={() => onFriendRespond(n, 'Rejected')}
                           disabled={!!busy[n._id]}
-                          className="btn bg-white border border-[var(--color-warning)] text-[var(--color-warning)] hover:bg-[color-mix(in_oklab,var(--color-warning)_10%,white)]"
+                          className="btn bg-white border border-[var(--color-warning)] text-[var(--color-warning)] hover:bg-[color-mix(in oklab,var(--color-warning)_10%,white)]"
                         >
                           {busy[n._id] ? 'Rejecting…' : 'Reject'}
                         </button>
@@ -330,7 +330,7 @@ export default function NotificationsPage() {
                           <button
                             onClick={() => onDeclineMatch(n)}
                             disabled={!!busy[n._id]}
-                            className="btn bg-white border border-[var(--color-warning)] text-[var(--color-warning)] hover:bg-[color-mix(in_oklab,var(--color-warning)_10%,white)]"
+                            className="btn bg-white border border-[var(--color-warning)] text-[var(--color-warning)] hover:bg-[color-mix(in oklab,var(--color-warning)_10%,white)]"
                           >
                             {busy[n._id] ? 'Declining…' : 'Decline'}
                           </button>

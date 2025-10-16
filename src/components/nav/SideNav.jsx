@@ -63,8 +63,8 @@ export default function SideNav() {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
                   isActive
-                    ? "bg-[color-mix(in_oklab,var(--color-cta)_12%,white)] text-[var(--color-cta)] shadow-sm"
-                    : "text-[var(--color-secondary)] hover:bg-[color-mix(in_oklab,var(--color-border-muted)_25%,white)] hover:text-[var(--color-primary)]"
+                    ? "bg-[color-mix(in oklab,var(--color-cta)_12%,white)] text-[var(--color-cta)] shadow-sm"
+                    : "text-[var(--color-secondary)] hover:bg-[color-mix(in oklab,var(--color-border-muted)_25%,white)] hover:text-[var(--color-primary)]"
                 }`
               }
             >
@@ -80,8 +80,8 @@ export default function SideNav() {
             className={({ isActive }) =>
               `relative flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
                 isActive
-                  ? "bg-[color-mix(in_oklab,var(--color-cta)_12%,white)] text-[var(--color-cta)] shadow-sm"
-                  : "text-[var(--color-secondary)] hover:bg-[color-mix(in_oklab,var(--color-border-muted)_25%,white)] hover:text-[var(--color-primary)]"
+                  ? "bg-[color-mix(in oklab,var(--color-cta)_12%,white)] text-[var(--color-cta)] shadow-sm"
+                  : "text-[var(--color-secondary)] hover:bg-[color-mix(in oklab,var(--color-border-muted)_25%,white)] hover:text-[var(--color-primary)]"
               }`
             }
           >

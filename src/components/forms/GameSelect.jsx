@@ -192,8 +192,8 @@ export default function GameSelect({
                     type="button"
                     className={`w-full text-left px-3 py-2 ${
                       i === activeIdx
-                        ? "bg-[color-mix(in_oklab,var(--color-border-muted)_30%,white)]"
-                        : "hover:bg-[color-mix(in_oklab,var(--color-border-muted)_20%,white)]"
+                        ? "bg-[color-mix(in oklab,var(--color-border-muted)_30%,white)]"
+                        : "hover:bg-[color-mix(in oklab,var(--color-border-muted)_20%,white)]"
                     }`}
                     onMouseEnter={() => setActiveIdx(i)}
                     onClick={() => select(g)}

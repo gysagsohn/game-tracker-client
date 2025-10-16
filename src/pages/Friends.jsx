@@ -171,8 +171,8 @@ const TabButton = ({ id, children }) => {
       onClick={() => setTab(id)}
       className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
         ${isActive
-          ? "bg-[color-mix(in_oklab,var(--color-cta)_10%,transparent)] text-[var(--color-cta)] shadow-sm"
-          : "text-[var(--color-secondary)] hover:bg-[color-mix(in_oklab,var(--color-border-muted)_25%,transparent)] hover:text-[var(--color-primary)]"
+          ? "bg-[color-mix(in oklab,var(--color-cta)_10%,transparent)] text-[var(--color-cta)] shadow-sm"
+          : "text-[var(--color-secondary)] hover:bg-[color-mix(in oklab,var(--color-border-muted)_25%,transparent)] hover:text-[var(--color-primary)]"
         }`}
     >
       {children}
