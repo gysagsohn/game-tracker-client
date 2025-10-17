@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import GoogleButton from "../components/GoogleButton";
@@ -6,41 +5,57 @@ import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import api from "../lib/axios";
 
+/**
+ * ForgotPasswordPage
+ * - Posts email to /auth/forgot-password
+ * - Surfaces server-sent messages (so the Google-only hint can detect them)
+ * - Shows a Google CTA if backend says this account uses Google sign-in
+ */
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [ok, setOk] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const onSubmit = async (e) => {
+  async function onSubmit(e) {
     e.preventDefault();
     setLoading(true);
     setOk("");
     setError("");
     try {
       const res = await api.post("/auth/forgot-password", { email });
-      setOk(res.data?.message || "Reset link sent to your email.");
+      // Prefer server message; fall back to a generic success
+      setOk(res?.data?.message || "Reset link sent to your email.");
     } catch (err) {
-      setError(err.message);
+      // Surface backend-provided messages for UX (and Google-only hint)
+      const apiMsg =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message ||
+        "Something went wrong.";
+      setError(apiMsg);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  // Detect “Google-only” hint from API response
-  const googleOnly = /google\s*sign[- ]?in/i.test(error);
+  // Detect “Google-only” hint from API response (kept consistent with backend)
+  const googleOnly = /google\s*sign[- ]?in/i.test(error || "");
 
   return (
     <div className="min-h-screen bg-default flex items-center justify-center p-6">
       <div className="card shadow-card p-6 bg-card rounded-[var(--radius-standard)] w-full max-w-md text-center">
-        {/* SR announcement for screen readers */}
-        <div aria-live="polite" className="sr-only">{ok || error}</div>
+        {/* Screen reader live region for async status messages */}
+        <div aria-live="polite" className="sr-only">
+          {ok || error}
+        </div>
 
         <h1 className="h1 mb-2">Forgot password</h1>
         <p className="text-secondary mb-6">
           Enter your email and we’ll send you a password reset link.
         </p>
 
+        {/* Success banner */}
         {ok && (
           <div
             className="mb-4 rounded-[var(--radius-standard)] border p-3 text-sm"
@@ -48,11 +63,13 @@ export default function ForgotPasswordPage() {
               borderColor: "color-mix(in oklab, var(--color-success) 40%, transparent)",
               background: "color-mix(in oklab, var(--color-success) 10%, white)",
             }}
+            role="status"
           >
             {ok}
           </div>
         )}
 
+        {/* Error banner */}
         {error && (
           <div
             className="mb-4 rounded-[var(--radius-standard)] border p-3 text-sm"
@@ -61,6 +78,7 @@ export default function ForgotPasswordPage() {
               background: "color-mix(in oklab, var(--color-warning) 10%, white)",
               color: "var(--color-warning)",
             }}
+            role="alert"
           >
             {error}
           </div>
@@ -91,6 +109,7 @@ export default function ForgotPasswordPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            autoComplete="email"
           />
           <Button className="w-full" type="submit" loading={loading} disabled={loading}>
             Send reset link
