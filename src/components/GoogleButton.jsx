@@ -1,9 +1,21 @@
-
 import googleLogo from "../assets/google-logo.svg";
 
+function trimTrailingSlash(s = "") {
+  return s.replace(/\/+$/, "");
+}
+
 export default function GoogleButton({ className = "" }) {
+  const API = trimTrailingSlash(import.meta.env.VITE_API_URL || "");
+
   const handleClick = () => {
-    window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`;
+    if (!API) {
+      // Failsafe: avoid crashing if env is missing
+      console.error("VITE_API_URL is not defined");
+      return;
+    }
+    // Optional: preserve current path for post-login redirect
+    const redirect = encodeURIComponent(window.location.pathname || "/");
+    window.location.href = `${API}/auth/google?redirect=${redirect}`;
   };
 
   return (
