@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { AuthContext } from "./AuthContextBase";
 import api from "../lib/axios";
+import { tokenStorage } from "../utils/tokenStorage";
 
 export default function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => localStorage.getItem("token"));
+  const [token, setToken] = useState(() => tokenStorage.get());
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -64,8 +65,8 @@ export default function AuthProvider({ children }) {
     // Extract token and user from response
     const { token: newToken, user: newUser } = res.data;
     
-    // Persist token to localStorage
-    localStorage.setItem("token", newToken);
+    // Persist token using centralized storage utility
+    tokenStorage.set(newToken);
     
     // Update state to trigger user hydration
     setToken(newToken);
@@ -84,7 +85,7 @@ export default function AuthProvider({ children }) {
 
   // Logout function clears token and user state
   const logout = useCallback(() => {
-    localStorage.removeItem("token");
+    tokenStorage.remove();
     setToken(null);
     setUser(null);
   }, []);

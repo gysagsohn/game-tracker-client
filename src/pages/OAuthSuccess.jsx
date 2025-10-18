@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { tokenStorage } from "../utils/tokenStorage";
 
 export default function OAuthSuccess() {
   const { search, hash } = useLocation();
@@ -23,8 +24,9 @@ export default function OAuthSuccess() {
         
         setStatus("saving");
         
-        // Store token - AuthProvider will hydrate user via /users/me
-        localStorage.setItem("token", token);
+        // Store token using centralized utility
+        // AuthProvider will hydrate user via /users/me
+        tokenStorage.set(token);
 
         // Small delay to give visual feedback before redirect
         setTimeout(() => {
