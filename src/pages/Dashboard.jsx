@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import ActionButtons from "../components/dashboard/ActionButtons";
 import LastGameCard from "../components/dashboard/LastGameCard";
 import StatsCard from "../components/dashboard/StatsCard";
-import Alert from "../components/ui/Alert"; // ← shared alert banner
+import Alert from "../components/ui/Alert";
+import Card from "../components/ui/Card";
 import { useAuth } from "../contexts/useAuth";
 import api from "../lib/axios";
-import { Link } from "react-router-dom";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -37,7 +38,7 @@ export default function Dashboard() {
         const mPayload = mRes.data?.data || mRes.data || [];
         const sPayload = sRes.data?.data || sRes.data || {};
 
-        // Sort newest → oldest by date
+        // Sort newest to oldest by date
         const sorted = Array.isArray(mPayload)
           ? [...mPayload].sort((a, b) => new Date(b.date) - new Date(a.date))
           : [];
@@ -57,7 +58,7 @@ export default function Dashboard() {
     };
   }, [user?._id]);
 
-  // Derive the “last match” once, memoized
+  // Derive the "last match" once, memoized
   const lastMatch = useMemo(() => matches?.[0] || null, [matches]);
 
   return (
@@ -67,7 +68,7 @@ export default function Dashboard() {
         Welcome back{user?.firstName ? `, ${user.firstName}` : ""}
       </h1>
 
-      {/* Error banner (replaces the placeholder div) */}
+      {/* Error banner */}
       {error && (
         <div className="mb-4">
           <Alert
