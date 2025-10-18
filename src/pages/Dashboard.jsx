@@ -5,6 +5,7 @@ import StatsCard from "../components/dashboard/StatsCard";
 import Alert from "../components/ui/Alert"; // ← shared alert banner
 import { useAuth } from "../contexts/useAuth";
 import api from "../lib/axios";
+import { Link } from "react-router-dom";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -81,7 +82,24 @@ export default function Dashboard() {
 
       {/* Main cards; each handles its own loading skeletons */}
       <section className="grid gap-6 lg:gap-10 md:grid-cols-2 mb-8 lg:mb-12">
-        <LastGameCard match={lastMatch} loading={loading} />
+        {/* Only show LastGameCard if there's a match */}
+        {lastMatch ? (
+          <LastGameCard match={lastMatch} loading={loading} />
+        ) : (
+          !loading && (
+            <Card className="p-6 text-center">
+              <div className="text-6xl mb-4">🎮</div>
+              <h3 className="text-lg font-semibold mb-2">No matches yet</h3>
+              <p className="text-secondary mb-4">
+                Start tracking your game nights with friends!
+              </p>
+              <Link to="/matches/new" className="btn btn-primary inline-block">
+                Log Your First Match
+              </Link>
+            </Card>
+          )
+        )}
+        
         <StatsCard stats={stats} loading={loading} />
       </section>
 
