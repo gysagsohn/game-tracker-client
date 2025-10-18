@@ -8,64 +8,10 @@ import {
   markNotificationRead,
 } from '../lib/api/notifications.js';
 import { confirmSession, declineSession } from '../lib/api/sessions.js';
-import {
-  MdPersonAdd,
-  MdCheckCircle,
-  MdSportsEsports,
-  MdAlarm,
-  MdEdit,
-  MdFlag,
-  MdBlock,
-  MdNotifications as MdBell
-} from "react-icons/md";
+import NotificationItem from '../components/notifications/NotificationItem.jsx';
 
 function classNames(...xs) {
   return xs.filter(Boolean).join(' ');
-}
-
-const TYPE_ICON = {
-  FRIEND_REQUEST: <MdPersonAdd size={20} />,
-  FRIEND_ACCEPTED: <MdCheckCircle size={20} />,
-  FRIEND_ACCEPT: <MdCheckCircle size={20} />,
-  MATCH_INVITE: <MdSportsEsports size={20} />,
-  MATCH_REMINDER: <MdAlarm size={20} />,
-  MATCH_UPDATED: <MdEdit size={20} />,
-  MATCH_CONFIRMED: <MdFlag size={20} />,
-  MATCH_DECLINED: <MdBlock size={20} />,
-  DEFAULT: <MdBell size={20} />,
-};
-
-function timeAgo(iso) {
-  const d = new Date(iso);
-  const diff = Math.max(0, Date.now() - d.getTime());
-  const s = Math.floor(diff / 1000);
-  if (s < 60) return `${s}s ago`;
-  const m = Math.floor(s / 60);
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  const days = Math.floor(h / 24);
-  return `${days}d ago`;
-}
-
-function resolveLink(n) {
-  if (n?.link) return n.link;
-  switch (n?.type) {
-    case 'FRIEND_REQUEST':
-      return '/friends?tab=requests';
-    case 'FRIEND_ACCEPTED':
-    case 'FRIEND_ACCEPT':
-      return '/friends';
-    case 'MATCH_INVITE':
-    case 'MATCH_REMINDER':
-    case 'MATCH_UPDATED':
-    case 'MATCH_CONFIRMED':
-      if (n.sessionId) return `/matches/${n.sessionId}`;
-      if (n.entityId) return `/matches/${n.entityId}`;
-      return '/matches';
-    default:
-      return '#';
-  }
 }
 
 export default function NotificationsPage() {
@@ -101,7 +47,7 @@ export default function NotificationsPage() {
     load();
   }, [load]);
 
-  async function onMarkRead(id) {
+  const onMarkRead = useCallback(async (id) => {
     try {
       await markNotificationRead(id);
       setItems((prev) => prev.map((n) => (n._id === id ? { ...n, isRead: true } : n)));
@@ -110,13 +56,13 @@ export default function NotificationsPage() {
     } catch {
       toast.error('Could not mark as read');
     }
-  }
+  }, [toast]);
 
-  async function onFriendRespond(n, action) {
+  const onFriendRespond = useCallback(async (n, action) => {
     const id = n._id;
     setBusy((b) => ({ ...b, [id]: true }));
     try {
-      await respondFriendRequest(n?.sender?._id || n.sender, action); // "Accepted" | "Rejected"
+      await respondFriendRequest(n?.sender?._id || n.sender, action);
       setItems((prev) => prev.map((x) => (x._id === id ? { ...x, isRead: true } : x)));
       setMeta((m) => ({ ...m, unreadCount: Math.max(0, (m.unreadCount || 0) - 1) }));
       toast.success(action === 'Accepted' ? 'Friend request accepted' : 'Friend request rejected');
@@ -125,9 +71,9 @@ export default function NotificationsPage() {
     } finally {
       setBusy((b) => ({ ...b, [id]: false }));
     }
-  }
+  }, [toast]);
 
-  async function onConfirmMatch(n) {
+  const onConfirmMatch = useCallback(async (n) => {
     if (!n.sessionId) return navigate('/matches');
     setBusy((b) => ({ ...b, [n._id]: true }));
     try {
@@ -141,9 +87,9 @@ export default function NotificationsPage() {
     } finally {
       setBusy((b) => ({ ...b, [n._id]: false }));
     }
-  }
+  }, [toast, navigate]);
 
-  async function onDeclineMatch(n) {
+  const onDeclineMatch = useCallback(async (n) => {
     if (!n.sessionId) return;
     setBusy((b) => ({ ...b, [n._id]: true }));
     try {
@@ -156,7 +102,7 @@ export default function NotificationsPage() {
     } finally {
       setBusy((b) => ({ ...b, [n._id]: false }));
     }
-  }
+  }, [toast]);
 
   async function onMarkAllRead() {
     setMarkingAll(true);
@@ -183,6 +129,10 @@ export default function NotificationsPage() {
     setParams(params, { replace: true });
   }
 
+  const handleNavigate = useCallback((link) => {
+    navigate(link);
+  }, [navigate]);
+
   return (
     <div className="max-w-3xl mx-auto p-4 sm:p-6">
       <div className="max-w-3xl mx-auto mb-6 lg:mb-10 px-1
@@ -201,7 +151,6 @@ export default function NotificationsPage() {
           </button>
         </div>
       </div>
-
 
       <div className="mb-3 flex gap-2">
         <button
@@ -232,133 +181,18 @@ export default function NotificationsPage() {
         ) : items.length === 0 ? (
           <div className="p-6 text-sm text-[var(--color-secondary)]">No notifications.</div>
         ) : (
-          items.map((n) => {
-            const icon = TYPE_ICON[n?.type] || TYPE_ICON.DEFAULT;
-            const link = resolveLink(n);
-            const isLink = link && link !== '#';
-
-            const senderName =
-              n?.sender?.firstName
-                ? `${n.sender.firstName}${n.sender.lastName ? ' ' + n.sender.lastName : ''}`
-                : undefined;
-
-            const prettyType = (n?.type || 'Notification').replace(/_/g, ' ').trim();
-            let title = n.title || prettyType;
-            let description = n.description || undefined;
-
-            if (!n.title) {
-              switch (n?.type) {
-                case 'FRIEND_REQUEST':
-                  title = `Friend request from ${senderName || 'someone'}`;
-                  break;
-                case 'FRIEND_ACCEPTED':
-                case 'FRIEND_ACCEPT':
-                  title = `${senderName || 'Your friend'} accepted your friend request`;
-                  break;
-                case 'MATCH_INVITE':
-                  title = `You've been added to a match`;
-                  break;
-                case 'MATCH_UPDATED':
-                  title = `Match was updated`;
-                  break;
-                case 'MATCH_REMINDER':
-                  title = `Match reminder`;
-                  break;
-                case 'MATCH_CONFIRMED':
-                  title = `Match confirmed`;
-                  break;
-                case 'MATCH_DECLINED':
-                  title = `A player declined the match`;
-                  break;
-                default:
-                  title = prettyType;
-              }
-            }
-
-            return (
-              <div
-                key={n._id}
-                className={classNames('p-4 flex items-start gap-3', n.isRead ? 'opacity-70' : '')}
-              >
-                <div className="leading-none shrink-0 text-[var(--color-secondary)]">
-                {icon}
-                </div>
-                <div className="flex-1 min-w-0 max-h-48 overflow-auto pr-1">
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-[var(--color-primary)] truncate">{title}</p>
-                    <span className="text-xs text-[var(--color-secondary)]">
-                      {n.createdAt ? timeAgo(n.createdAt) : ''}
-                    </span>
-                  </div>
-
-                  {description ? (
-                    <div className="mt-1 text-sm text-[var(--color-secondary)] max-h-32 overflow-auto pr-1">
-                      {description}
-                    </div>
-                  ) : null}
-
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {n.type === 'FRIEND_REQUEST' && (n.sender || n?.sender?._id) && !n.isRead && (
-                      <>
-                        <button
-                          onClick={() => onFriendRespond(n, 'Accepted')}
-                          disabled={!!busy[n._id]}
-                          className="btn btn-primary"
-                        >
-                          {busy[n._id] ? 'Accepting…' : 'Accept'}
-                        </button>
-                        <button
-                          onClick={() => onFriendRespond(n, 'Rejected')}
-                          disabled={!!busy[n._id]}
-                          className="btn bg-white border border-[var(--color-warning)] text-[var(--color-warning)] hover:bg-[color-mix(in oklab,var(--color-warning)_10%,white)]"
-                        >
-                          {busy[n._id] ? 'Rejecting…' : 'Reject'}
-                        </button>
-                      </>
-                    )}
-
-                    {(n.type === 'MATCH_INVITE' || n.type === 'MATCH_UPDATED' || n.type === 'MATCH_REMINDER') &&
-                      n.sessionId && (
-                        <>
-                          <button
-                            onClick={() => onConfirmMatch(n)}
-                            disabled={!!busy[n._id]}
-                            className="btn btn-primary"
-                          >
-                            {busy[n._id] ? 'Confirming…' : 'Confirm'}
-                          </button>
-                          <button
-                            onClick={() => onDeclineMatch(n)}
-                            disabled={!!busy[n._id]}
-                            className="btn bg-white border border-[var(--color-warning)] text-[var(--color-warning)] hover:bg-[color-mix(in oklab,var(--color-warning)_10%,white)]"
-                          >
-                            {busy[n._id] ? 'Declining…' : 'Decline'}
-                          </button>
-                        </>
-                      )}
-
-                    {isLink && (
-                      <button
-                        onClick={() => navigate(link)}
-                        className="btn bg-white border border-[var(--color-border-muted)]"
-                      >
-                        Open
-                      </button>
-                    )}
-
-                    {!n.isRead && (
-                      <button
-                        onClick={() => onMarkRead(n._id)}
-                        className="btn bg-white border border-[var(--color-border-muted)]"
-                      >
-                        Mark read
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })
+          items.map((n) => (
+            <NotificationItem
+              key={n._id}
+              notification={n}
+              isBusy={!!busy[n._id]}
+              onFriendRespond={onFriendRespond}
+              onConfirmMatch={onConfirmMatch}
+              onDeclineMatch={onDeclineMatch}
+              onMarkRead={onMarkRead}
+              onNavigate={handleNavigate}
+            />
+          ))
         )}
       </div>
 

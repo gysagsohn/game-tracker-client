@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
-import Button from "../components/ui/Button";
+import { useEffect, useState, useCallback } from "react";
 import Card from "../components/ui/Card";
 import { useToast } from "../contexts/useToast";
 import api from "../lib/axios";
+import FriendRequestCard from "../components/friends/FriendRequestCard";
 
 export default function FriendRequestsPage() {
   const { toast } = useToast();
@@ -32,7 +32,7 @@ export default function FriendRequestsPage() {
     };
   }, []);
 
-  async function act(senderId, action) {
+  const act = useCallback(async (senderId, action) => {
     try {
       setBusy(senderId);
       await api.post("/friends/respond", { senderId, action }); // "Accepted" | "Rejected"
@@ -43,7 +43,7 @@ export default function FriendRequestsPage() {
     } finally {
       setBusy(null);
     }
-  }
+  }, [toast]);
 
   return (
     <main className="py-2 lg:py-6">
@@ -79,30 +79,14 @@ export default function FriendRequestsPage() {
         <div className="grid gap-3 max-w-xl mx-auto">
           {requests.map((r) => {
             const u = r.user || {};
-            const name = `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.email || "User";
             return (
-              <Card key={String(u._id)} className="p-4 flex items-center justify-between gap-3">
-                <div>
-                  <div className="font-medium">{name}</div>
-                  <div className="text-xs text-secondary">{u.email}</div>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    className="btn-sm"
-                    onClick={() => act(String(u._id), "Accepted")}
-                    disabled={busy === String(u._id)}
-                  >
-                    {busy === String(u._id) ? "…" : "Accept"}
-                  </Button>
-                  <button
-                    className="btn btn-sm"
-                    onClick={() => act(String(u._id), "Rejected")}
-                    disabled={busy === String(u._id)}
-                  >
-                    {busy === String(u._id) ? "…" : "Reject"}
-                  </button>
-                </div>
-              </Card>
+              <FriendRequestCard
+                key={String(u._id)}
+                user={u}
+                isBusy={busy === String(u._id)}
+                onAccept={() => act(String(u._id), "Accepted")}
+                onReject={() => act(String(u._id), "Rejected")}
+              />
             );
           })}
         </div>

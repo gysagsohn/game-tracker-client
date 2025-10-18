@@ -7,26 +7,36 @@ import { useAuth } from "../contexts/useAuth";
 import api from "../lib/axios";
 import FriendSearch from "../components/friends/FriendSearch";
 import Skeleton from "../components/ui/Skeleton";
+import { memo } from "react";
 
-function UserRow({ user, right, subtitle }) {
-  const name =
-    `${user?.firstName || ""} ${user?.lastName || ""}`.trim() ||
-    user?.email ||
-    "User";
-  return (
-    <div className="flex items-center justify-between gap-3 border border-[--color-border-muted] rounded-[var(--radius-standard)] p-4 bg-white shadow-sm">
-      <div className="min-w-0">
-        <div className="text-sm font-medium truncate">{name}</div>
-        {(user?.email || subtitle) && (
-          <div className="text-xs text-secondary truncate">
-            {subtitle || user?.email}
-          </div>
-        )}
+const UserRow = memo(
+  function UserRow({ user, right, subtitle }) {
+    const name =
+      `${user?.firstName || ""} ${user?.lastName || ""}`.trim() ||
+      user?.email ||
+      "User";
+    return (
+      <div className="flex items-center justify-between gap-3 border border-[--color-border-muted] rounded-[var(--radius-standard)] p-4 bg-white shadow-sm">
+        <div className="min-w-0">
+          <div className="text-sm font-medium truncate">{name}</div>
+          {(user?.email || subtitle) && (
+            <div className="text-xs text-secondary truncate">
+              {subtitle || user?.email}
+            </div>
+          )}
+        </div>
+        <div className="flex items-center gap-2">{right}</div>
       </div>
-      <div className="flex items-center gap-2">{right}</div>
-    </div>
-  );
-}
+    );
+  },
+  // Custom comparison: only re-render if user ID or subtitle changes
+  (prevProps, nextProps) => {
+    return (
+      prevProps.user?._id === nextProps.user?._id &&
+      prevProps.subtitle === nextProps.subtitle
+    );
+  }
+);
 
 export default function FriendsPage() {
   const { user } = useAuth();

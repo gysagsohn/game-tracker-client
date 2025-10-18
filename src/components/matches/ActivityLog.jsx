@@ -1,4 +1,4 @@
-
+import { memo } from "react";
 import { FaBell, FaEdit, FaHistory, FaPlus, FaUserCheck } from "react-icons/fa";
 
 function fmt(dt) {
@@ -15,76 +15,85 @@ function nameOf(u) {
   return nn || u.email || "Someone";
 }
 
-export default function ActivityLog({ session }) {
-  if (!session) return null;
+// Memo-ized ActivityLog - only re-renders when session ID changes
+const ActivityLog = memo(
+  function ActivityLog({ session }) {
+    if (!session) return null;
 
-  const events = [];
+    const events = [];
 
-  // Created
-  if (session.createdAt) {
-    events.push({
-      ts: session.createdAt,
-      icon: <FaPlus />,
-      title: "Match created",
-      by: session.createdBy ? nameOf(session.createdBy) : undefined,
-    });
-  }
-
-  // Updated (only if actually later than created)
-  if (session.updatedAt && session.updatedAt !== session.createdAt) {
-    events.push({
-      ts: session.updatedAt,
-      icon: <FaEdit />,
-      title: "Match updated",
-      by: session.lastEditedBy ? nameOf(session.lastEditedBy) : undefined,
-    });
-  }
-
-  // Player confirmations
-  (session.players || []).forEach((p) => {
-    if (p.confirmed && p.confirmedAt) {
+    // Created
+    if (session.createdAt) {
       events.push({
-        ts: p.confirmedAt,
-        icon: <FaUserCheck />,
-        title: `${p.name || nameOf(p.user)} confirmed${p.result ? ` (${p.result})` : ""}`,
+        ts: session.createdAt,
+        icon: <FaPlus />,
+        title: "Match created",
+        by: session.createdBy ? nameOf(session.createdBy) : undefined,
       });
     }
-  });
 
-  // Reminder
-  if (session.lastReminderSent) {
-    events.push({
-      ts: session.lastReminderSent,
-      icon: <FaBell />,
-      title: "Reminder email sent to unconfirmed players",
+    // Updated (only if actually later than created)
+    if (session.updatedAt && session.updatedAt !== session.createdAt) {
+      events.push({
+        ts: session.updatedAt,
+        icon: <FaEdit />,
+        title: "Match updated",
+        by: session.lastEditedBy ? nameOf(session.lastEditedBy) : undefined,
+      });
+    }
+
+    // Player confirmations
+    (session.players || []).forEach((p) => {
+      if (p.confirmed && p.confirmedAt) {
+        events.push({
+          ts: p.confirmedAt,
+          icon: <FaUserCheck />,
+          title: `${p.name || nameOf(p.user)} confirmed${p.result ? ` (${p.result})` : ""}`,
+        });
+      }
     });
-  }
 
-  // Sort newest first
-  events.sort((a, b) => new Date(b.ts) - new Date(a.ts));
+    // Reminder
+    if (session.lastReminderSent) {
+      events.push({
+        ts: session.lastReminderSent,
+        icon: <FaBell />,
+        title: "Reminder email sent to unconfirmed players",
+      });
+    }
 
-  if (events.length === 0) return null;
+    // Sort newest first
+    events.sort((a, b) => new Date(b.ts) - new Date(a.ts));
 
-  return (
-    <div className="bg-card rounded-[var(--radius-standard)] shadow-card border border-[--color-border-muted]/60 p-4">
-      <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-        <FaHistory className="icon-secondary" /> Activity
-      </h3>
+    if (events.length === 0) return null;
 
-      <ol className="space-y-3">
-        {events.map((e, i) => (
-          <li key={i} className="flex items-start gap-2">
-            <div className="icon-secondary mt-0.5">{e.icon}</div>
-            <div className="text-sm">
-              <div className="font-medium">{e.title}</div>
-              <div className="text-secondary text-xs">
-                {fmt(e.ts)}
-                {e.by ? ` • by ${e.by}` : ""}
+    return (
+      <div className="bg-card rounded-[var(--radius-standard)] shadow-card border border-[--color-border-muted]/60 p-4">
+        <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+          <FaHistory className="icon-secondary" /> Activity
+        </h3>
+
+        <ol className="space-y-3">
+          {events.map((e, i) => (
+            <li key={i} className="flex items-start gap-2">
+              <div className="icon-secondary mt-0.5">{e.icon}</div>
+              <div className="text-sm">
+                <div className="font-medium">{e.title}</div>
+                <div className="text-secondary text-xs">
+                  {fmt(e.ts)}
+                  {e.by ? ` • by ${e.by}` : ""}
+                </div>
               </div>
-            </div>
-          </li>
-        ))}
-      </ol>
-    </div>
-  );
-}
+            </li>
+          ))}
+        </ol>
+      </div>
+    );
+  },
+  // Only re-render if session ID changes (entire session data changed)
+  (prevProps, nextProps) => {
+    return prevProps.session?._id === nextProps.session?._id;
+  }
+);
+
+export default ActivityLog;

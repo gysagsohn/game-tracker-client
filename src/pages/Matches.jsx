@@ -1,29 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
+import Skeleton from "../components/ui/Skeleton";
+import MatchCard from "../components/matches/MatchCard";
 import { useAuth } from "../contexts/useAuth";
 import api from "../lib/axios";
-import Skeleton from "../components/ui/Skeleton";
 
 function idOf(v) {
   if (!v) return null;
   if (typeof v === "string") return v;
   if (v && typeof v === "object" && v._id) return v._id;
   return null;
-}
-
-function badgeClassForResult(r) {
-  switch (r) {
-    case "Win":
-      return "bg-[color-mix(in oklab,var(--color-success)_18%,white)]";
-    case "Loss":
-      return "bg-[color-mix(in oklab,var(--color-warning)_18%,white)]";
-    case "Draw":
-      return "bg-[color-mix(in oklab,var(--color-border-muted)_40%,white)]";
-    default:
-      return "";
-  }
 }
 
 export default function MatchesPage() {
@@ -129,10 +116,7 @@ export default function MatchesPage() {
       <div className="max-w-3xl mx-auto mb-6 lg:mb-10 px-1
                       flex flex-col items-center
                       md:grid md:grid-cols-[1fr_auto_1fr] md:items-center">
-        {/* Centered title; spans on md */}
         <h1 className="h1 text-center md:col-span-3">Match History</h1>
-
-        {/* Action: small gap under title on mobile; none on md */}
         <div className="mt-2 md:mt-0 md:col-start-3 md:justify-self-end">
           <Link to="/matches/new" className="btn btn-primary md:btn">
             + New Match
@@ -227,138 +211,17 @@ export default function MatchesPage() {
         </Card>
       ) : (
         <div className="grid gap-3 max-w-3xl mx-auto">
-          {list.map((m) => {
-            const createdBy = String(idOf(m.createdBy));
-            const amCreator = myId && createdBy === myId;
-
-            const me =
-              (m?.players || []).find((p) => String(idOf(p.user)) === myId) ||
-              (m?.players || [])[0] ||
-              null;
-
-            const myResult = me?.result || "—";
-            const canConfirm = !!me && me.confirmed === false;
-            const hasUnconfirmedOthers = (m.players || []).some(
-              (p) => p.user && String(idOf(p.user)) !== myId && !p.confirmed
-            );
-            const canRemind =
-              m.matchStatus === "Pending" && amCreator && hasUnconfirmedOthers;
-
-            const myBadge =
-              myResult !== "—" ? (
-                <span
-                  className={`px-2 py-0.5 rounded text-xs ${badgeClassForResult(
-                    myResult
-                  )}`}
-                >
-                  {myResult}
-                </span>
-              ) : (
-                <span>—</span>
-              );
-
-            return (
-              <Card key={m._id} className="p-4">
-                {/* Top row: game + date + quick nav */}
-                <div className="flex items-baseline justify-between gap-2">
-                  <h3 className="font-semibold text-sm">
-                    <Link
-                      to={`/matches/${m._id}`}
-                      className="underline hover:no-underline"
-                      style={{ color: "var(--color-cta)" }}
-                    >
-                      {m?.game?.name || "Game"}
-                    </Link>
-                  </h3>
-                  <span className="text-xs text-secondary">
-                    {m?.date ? new Date(m.date).toLocaleDateString() : ""}
-                  </span>
-                </div>
-
-                {/* Status + your result */}
-                <div className="mt-1 flex items-center gap-2 text-sm">
-                  <span className="font-medium">Status:</span>
-                  <span
-                    className={`px-2 py-0.5 rounded text-xs ${
-                      m.matchStatus === "Confirmed"
-                        ? "bg-[color-mix(in oklab,var(--color-success)_15%,white)]"
-                        : "bg-[color-mix(in oklab,var(--color-border-muted)_35%,white)]"
-                    }`}
-                  >
-                    {m.matchStatus || "Pending"}
-                  </span>
-
-                  <span className="ml-3 font-medium">Your result:</span>
-                  {myBadge}
-                </div>
-
-                {/* Players (tiny guest hints) */}
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {(m.players || []).map((p, idx) => {
-                    const isGuest = !p.user;
-                    const guestIcon = amCreator ? "✎" : "🔒"; // creator can edit, others read-only
-                    return (
-                      <span
-                        key={`${String(idOf(p.user)) || "guest"}-${idx}`}
-                        className="inline-flex items-center gap-1 rounded-full border border-[--color-border-muted] px-2 py-0.5 text-xs"
-                        title={
-                          isGuest
-                            ? amCreator
-                              ? "Guest • you can edit this player"
-                              : "Guest • read-only"
-                            : ""
-                        }
-                      >
-                        <span>{p.name || "Player"}</span>
-                        {isGuest && (
-                          <span className="ml-1 px-1 rounded bg-[color-mix(in oklab,var(--color-border-muted)_35%,white)]">
-                            Guest {guestIcon}
-                          </span>
-                        )}
-                        {p.confirmed ? (
-                          <span title="Confirmed" aria-label="Confirmed">
-                            ✔︎
-                          </span>
-                        ) : (
-                          <span title="Pending" aria-label="Pending">
-                            ⧗
-                          </span>
-                        )}
-                      </span>
-                    );
-                  })}
-                </div>
-
-                {/* Notes */}
-                {m?.notes && (
-                  <p className="text-sm text-secondary mt-2">{m.notes}</p>
-                )}
-
-                {/* Actions */}
-                <div className="mt-3 flex gap-2">
-                  {canConfirm && (
-                    <Button
-                      className="btn-sm"
-                      onClick={() => confirmMe(m._id)}
-                      disabled={confirmingId === m._id}
-                    >
-                      {confirmingId === m._id ? "Confirming…" : "Confirm I'm in"}
-                    </Button>
-                  )}
-
-                  {canRemind && (
-                    <Button
-                      className="btn-sm"
-                      onClick={() => remindPlayers(m._id)}
-                      disabled={remindingId === m._id}
-                    >
-                      {remindingId === m._id ? "Sending…" : "Remind players"}
-                    </Button>
-                  )}
-                </div>
-              </Card>
-            );
-          })}
+          {list.map((m) => (
+            <MatchCard
+              key={m._id}
+              match={m}
+              myId={myId}
+              onConfirm={confirmMe}
+              onRemind={remindPlayers}
+              confirmingId={confirmingId}
+              remindingId={remindingId}
+            />
+          ))}
         </div>
       )}
     </main>
