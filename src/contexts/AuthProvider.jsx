@@ -1,67 +1,88 @@
 import { useCallback, useEffect, useState } from "react";
 import { AuthContext } from "./AuthContextBase";
+import api from "../lib/axios";
 
 export default function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem("token"));
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // hydrate user from token
+  // Hydrate user from token on mount or token change
   useEffect(() => {
     let ignore = false;
+    
     async function run() {
       try {
         setLoading(true);
+        
+        // No token means no user - skip API call
         if (!token) {
           setUser(null);
           return;
         }
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) throw new Error("Session expired. Please sign in again.");
-        const json = await res.json();
-        if (!ignore) setUser(json?.data || json?.user || null);
-      } catch {
-        localStorage.removeItem("token");
+        
+        // Use axios instance instead of fetch
+        // This benefits from interceptors (auto token injection, 401 handling)
+        const res = await api.get("/users/me");
+        
+        // Extract user from response data
+        if (!ignore) {
+          setUser(res.data?.data || res.data?.user || null);
+        }
+      } catch (err) {
+        // Log error in development for debugging
+        if (import.meta.env.DEV) {
+          console.error("AuthProvider hydration error:", err);
+        }
+        
+        // Axios interceptor already removed token and redirected on 401
+        // Just clear local state
         if (!ignore) {
           setToken(null);
           setUser(null);
         }
       } finally {
-        if (!ignore) setLoading(false);
+        if (!ignore) {
+          setLoading(false);
+        }
       }
     }
+    
     run();
-    return () => { ignore = true; };
+    
+    // Cleanup function to prevent state updates on unmounted component
+    return () => {
+      ignore = true;
+    };
   }, [token]);
 
-  // email+password login
+  // Email and password login
   const login = useCallback(async (email, password) => {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-    const json = await res.json();
-    if (!res.ok) throw new Error(json?.message || "Login failed");
-    localStorage.setItem("token", json.token);
-    setToken(json.token);
-    setUser(json.user);
+    // Use axios instance for consistent error handling
+    const res = await api.post("/auth/login", { email, password });
+    
+    // Extract token and user from response
+    const { token: newToken, user: newUser } = res.data;
+    
+    // Persist token to localStorage
+    localStorage.setItem("token", newToken);
+    
+    // Update state to trigger user hydration
+    setToken(newToken);
+    setUser(newUser);
   }, []);
 
-  // signup (don’t auto-login; you redirect to /check-email)
+  // Signup (returns response but doesn't auto-login)
+  // User should be redirected to /check-email after signup
   const signup = useCallback(async (payload) => {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/signup`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const json = await res.json();
-    if (!res.ok) throw new Error(json?.message || "Signup failed");
-    return json;
+    // Use axios instance for consistent error handling
+    const res = await api.post("/auth/signup", payload);
+    
+    // Return the full response data for caller to handle
+    return res.data;
   }, []);
 
+  // Logout function clears token and user state
   const logout = useCallback(() => {
     localStorage.removeItem("token");
     setToken(null);

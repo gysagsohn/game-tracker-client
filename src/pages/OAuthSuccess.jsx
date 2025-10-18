@@ -6,6 +6,7 @@ export default function OAuthSuccess() {
   const nav = useNavigate();
   const [status, setStatus] = useState("init"); // init | saving | done | error
 
+  // Extract token from URL hash or query params
   const token = useMemo(() => {
     const fromHash = new URLSearchParams(String(hash).replace(/^#/, "")).get("token");
     const fromQuery = new URLSearchParams(search).get("token");
@@ -19,11 +20,13 @@ export default function OAuthSuccess() {
           setStatus("error");
           return;
         }
+        
         setStatus("saving");
-        // store token, AuthContext will hydrate /users/me
+        
+        // Store token - AuthProvider will hydrate user via /users/me
         localStorage.setItem("token", token);
 
-        // tiny delay to let storage settle + give a visual tick
+        // Small delay to give visual feedback before redirect
         setTimeout(() => {
           setStatus("done");
           nav("/dashboard", { replace: true });
@@ -40,7 +43,7 @@ export default function OAuthSuccess() {
     <div className="min-h-screen grid place-items-center bg-default">
       <div className="card p-6 w-full max-w-sm text-center">
         {status === "init" && (
-          <p className="text-secondary">Parsing sign‑in response…</p>
+          <p className="text-secondary">Parsing sign-in response...</p>
         )}
         {status === "saving" && (
           <p className="inline-flex items-center gap-2 text-secondary">
@@ -48,10 +51,10 @@ export default function OAuthSuccess() {
               <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" opacity=".25" />
               <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="4" fill="none" />
             </svg>
-            Finishing sign‑in…
+            Finishing sign-in...
           </p>
         )}
-        {status === "done" && <p>Signed in. Redirecting…</p>}
+        {status === "done" && <p>Signed in. Redirecting...</p>}
         {status === "error" && (
           <div>
             <p className="mb-2" style={{ color: "var(--color-warning)" }}>
