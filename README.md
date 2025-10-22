@@ -5,6 +5,9 @@
   <a href="https://gy-gametracker.netlify.app">
     <img src="https://img.shields.io/netlify/54a5c9e5-9595-48c7-a422-221e8a15bc1d?label=Netlify%20Deploy&logo=netlify" alt="Netlify frontend">
   </a>
+  <a href="https://game-tracker-server-zq2k.onrender.com">
+    <img src="https://img.shields.io/badge/Render-Backend-green?logo=render" alt="Render backend">
+  </a>
   <img src="https://img.shields.io/badge/status-Live-brightgreen" alt="App status">
 </p>
 
@@ -458,19 +461,18 @@ npm run preview
 ### Current Limitations
 - No real-time updates (requires page refresh for new data)
 - No offline support (requires internet connection)
-- Token stored in localStorage (consider httpOnly cookies for enhanced security)
+- Token stored in localStorage (future: httpOnly cookies for enhanced security)
 - No automatic token refresh (tokens expire after 7 days)
-- Limited accessibility features (keyboard navigation needs improvement)
+
 
 ### Future Improvements
-- Implement WebSocket for real-time notifications
-- Add service worker for offline support
-- Migrate to httpOnly cookies for token storage
-- Add refresh token mechanism
-- Improve keyboard navigation and screen reader support
-- Add comprehensive test coverage
-- Implement code splitting for better performance
-- Add React.memo to prevent unnecessary re-renders
+- WebSocket integration for real-time notifications
+- Service worker for offline support
+- Refresh token mechanism
+- Enhanced keyboard navigation and accessibility
+- Comprehensive test coverage (unit + integration + E2E)
+- Code splitting for improved initial load time
+- React.memo optimization to prevent unnecessary re-renders
 
 ---
 
@@ -514,4 +516,21 @@ This project is open source and available for educational purposes.
 
 ---
 
-**Last Updated:** October 15, 2025
+## Recent Updates (October 2025)
+
+### Version 1.2 - UX & Performance Enhancements
+- Added skeleton loading states across all pages
+- Implemented error boundary for graceful crash handling
+- Enhanced toast notification system with better positioning and animations
+- Redesigned sidebar navigation with modern card layout and icons
+- Added real-time notification badges on mobile and desktop nav
+- Improved Friends page layout with centered, responsive design
+- Created reusable LogoutButton component
+- Fixed responsive header alignment on Notifications and Matches pages
+- Added comprehensive loading states for better perceived performance
+
+### Version 1.1 - Profile & Security
+- Complete profile page with user statistics
+- Password change functionality
+- Account deletion with confirmation
+- Silent authentication check (no loading flash)
