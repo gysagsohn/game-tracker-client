@@ -22,14 +22,19 @@ export default function Dashboard() {
     let ignore = false; // avoid setting state after unmount
 
     async function load() {
+      if (!user?._id) {
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         setError("");
 
-        // Fire both requests; if there's no user yet, return a resolved placeholder for stats
+        // Fire both requests
         const [mRes, sRes] = await Promise.all([
           api.get("/sessions"),
-          user?._id ? api.get(`/users/${user._id}/stats`) : Promise.resolve({ data: { data: {} } }),
+          api.get(`/users/${user._id}/stats`)
         ]);
 
         if (ignore) return;
@@ -81,24 +86,30 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Main cards; each handles its own loading skeletons */}
+      {/* Main cards */}
       <section className="grid gap-6 lg:gap-10 md:grid-cols-2 mb-8 lg:mb-12">
-        {/* Only show LastGameCard if there's a match */}
-        {lastMatch ? (
-          <LastGameCard match={lastMatch} loading={loading} />
+        {/* Last Match Card or Empty State */}
+        {loading ? (
+          <Card className="p-6">
+            <div className="animate-pulse space-y-4">
+              <div className="h-6 bg-gray-200 rounded w-1/2"></div>
+              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+              <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+            </div>
+          </Card>
+        ) : lastMatch ? (
+          <LastGameCard match={lastMatch} loading={false} />
         ) : (
-          !loading && (
-            <Card className="p-6 text-center">
-              <div className="text-6xl mb-4">🎮</div>
-              <h3 className="text-lg font-semibold mb-2">No matches yet</h3>
-              <p className="text-secondary mb-4">
-                Start tracking your game nights with friends!
-              </p>
-              <Link to="/matches/new" className="btn btn-primary inline-block">
-                Log Your First Match
-              </Link>
-            </Card>
-          )
+          <Card className="p-6 text-center">
+            <div className="text-6xl mb-4">🎮</div>
+            <h3 className="text-lg font-semibold mb-2">No matches yet</h3>
+            <p className="text-secondary mb-4">
+              Start tracking your game nights with friends!
+            </p>
+            <Link to="/matches/new" className="btn btn-primary inline-block">
+              Log Your First Match
+            </Link>
+          </Card>
         )}
         
         <StatsCard stats={stats} loading={loading} />
