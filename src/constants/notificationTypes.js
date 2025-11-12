@@ -1,6 +1,6 @@
-export const NotificationTypes = {
+export const NOTIFICATION_TYPES = {
   FRIEND_REQUEST: 'FRIEND_REQUEST',
-  FRIEND_ACCEPT: 'FRIEND_ACCEPT', // UI also supports FRIEND_ACCEPTED
+  FRIEND_ACCEPT: 'FRIEND_ACCEPT', 
   MATCH_INVITE: 'MATCH_INVITE',
   MATCH_UPDATED: 'MATCH_UPDATED',
   MATCH_REMINDER: 'MATCH_REMINDER',
@@ -8,4 +8,4 @@ export const NotificationTypes = {
   MATCH_DECLINED: 'MATCH_DECLINED',
 };
 
-export default NotificationTypes;
+export default NOTIFICATION_TYPES;
