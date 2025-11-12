@@ -46,7 +46,6 @@ function Notifications() {
         )
       );
     } catch {
-      // Catch block required but error not used
       toast.error('Failed to mark as read');
     } finally {
       setProcessingIds(prev => {
@@ -63,7 +62,6 @@ function Notifications() {
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       toast.success('All notifications marked as read');
     } catch {
-      // Catch block required but error not used
       toast.error('Failed to mark all as read');
     }
   }
@@ -75,12 +73,12 @@ function Notifications() {
       setProcessingIds(prev => new Set(prev).add(notificationId));
       
       await axios.post('/friends/respond', {
-        requesterId: senderId,
-        action: action // 'accept' or 'reject'
+        senderId: senderId,  // Changed from requesterId to senderId
+        action: action        // 'Accepted' or 'Rejected' (capitalized)
       });
 
       toast.success(
-        action === 'accept' 
+        action === 'Accepted' 
           ? 'Friend request accepted!' 
           : 'Friend request rejected'
       );
@@ -88,7 +86,7 @@ function Notifications() {
       // Refresh notifications to update UI
       await fetchNotifications();
     } catch (error) {
-      toast.error(error.message || `Failed to ${action} friend request`);
+      toast.error(error.message || `Failed to ${action.toLowerCase()} friend request`);
     } finally {
       setProcessingIds(prev => {
         const next = new Set(prev);
@@ -108,10 +106,20 @@ function Notifications() {
     if (notification.type === NOTIFICATION_TYPES.MATCH_INVITE && notification.session) {
       navigate(`/matches/${notification.session}`);
     } else if (notification.type === NOTIFICATION_TYPES.FRIEND_REQUEST) {
-      // Stay on notifications page to accept/reject
-      return;
+      // Navigate to friend requests tab
+      navigate('/friends?tab=requests');
+    } else if (notification.type === NOTIFICATION_TYPES.FRIEND_ACCEPT) {
+      // Navigate to friends list
+      navigate('/friends');
     }
   }
+
+  // Helper to strip HTML tags from message
+  const stripHtml = (html) => {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || '';
+  };
 
   const filteredNotifications = notifications.filter(n => {
     if (filter === 'unread') return !n.read;
@@ -172,6 +180,7 @@ function Notifications() {
           {filteredNotifications.map((notification) => {
             const isProcessing = processingIds.has(notification._id);
             const isFriendRequest = notification.type === NOTIFICATION_TYPES.FRIEND_REQUEST;
+            const cleanMessage = stripHtml(notification.message);
             
             return (
               <Card
@@ -179,12 +188,12 @@ function Notifications() {
                 className={`p-4 cursor-pointer hover:shadow-md transition-shadow ${
                   notification.read ? 'opacity-70' : 'bg-blue-50'
                 }`}
-                onClick={() => !isFriendRequest && handleNotificationClick(notification)}
+                onClick={() => handleNotificationClick(notification)}
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <p className="body-text break-words">
-                      {notification.message}
+                      {cleanMessage}
                     </p>
                     <p className="text-small text-secondary mt-1">
                       {new Date(notification.createdAt).toLocaleDateString()} at{' '}
@@ -206,7 +215,7 @@ function Notifications() {
                           handleFriendResponse(
                             notification._id,
                             notification.sender._id,
-                            'accept'
+                            'Accepted'  // Capitalized
                           );
                         }}
                         disabled={isProcessing}
@@ -221,7 +230,7 @@ function Notifications() {
                           handleFriendResponse(
                             notification._id,
                             notification.sender._id,
-                            'reject'
+                            'Rejected'  // Capitalized
                           );
                         }}
                         disabled={isProcessing}
@@ -244,6 +253,5 @@ function Notifications() {
     </div>
   );
 }
-
 
 export default Notifications;
