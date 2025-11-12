@@ -21,7 +21,7 @@ function idOf(v) {
 
 export default function NewMatchPage() {
   const { user } = useAuth();
-  const { toast } = useToast();
+  const toast = useToast();
   const nav = useNavigate();
   const location = useLocation();
 

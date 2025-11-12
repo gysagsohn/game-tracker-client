@@ -11,7 +11,7 @@ import { isEmail, validatePasswordLogin } from "../utils/validators";
 
 export default function LoginPage() {
   const { state } = useLocation();
-  const { toast } = useToast();
+  const toast = useToast();
 
   useEffect(() => {
     if (state?.justReset) {

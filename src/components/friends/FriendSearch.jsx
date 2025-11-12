@@ -17,7 +17,7 @@ function useDebounce(callback, delay) {
 
 export default function FriendSearch() {
   
-  const { toast } = useToast();
+  const toast = useToast();
   
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);

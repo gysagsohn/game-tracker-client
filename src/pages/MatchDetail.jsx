@@ -61,7 +61,7 @@ export default function MatchDetail() {
   const { id } = useParams();
   const nav = useNavigate();
   const { user } = useAuth();
-  const { toast } = useToast();
+  const toast = useToast();
 
   const myId = user?._id ? String(user._id) : null;
 

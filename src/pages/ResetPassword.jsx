@@ -11,7 +11,7 @@ export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
+  const toast = useToast();
   const nav = useNavigate();
 
   const onSubmit = async (e) => {

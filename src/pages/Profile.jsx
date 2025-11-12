@@ -10,7 +10,7 @@ import LogoutButton from "../components/ui/LogoutButton";
 
 export default function ProfilePage() {
   const { user, logout } = useAuth();
-  const { toast } = useToast();
+  const toast = useToast();
   const nav = useNavigate();
 
   // Stats from backend

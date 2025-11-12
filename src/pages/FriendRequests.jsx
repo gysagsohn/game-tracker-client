@@ -5,7 +5,7 @@ import api from "../lib/axios";
 import FriendRequestCard from "../components/friends/FriendRequestCard";
 
 export default function FriendRequestsPage() {
-  const { toast } = useToast();
+  const toast = useToast();
   const [loading, setLoading] = useState(true);
   const [requests, setRequests] = useState([]);
   const [err, setErr] = useState("");
