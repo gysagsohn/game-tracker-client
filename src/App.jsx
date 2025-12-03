@@ -7,7 +7,6 @@ import AddGamePage from "./pages/AddGame";
 import CheckEmailPage from "./pages/CheckEmail";
 import Dashboard from "./pages/Dashboard";
 import ForgotPasswordPage from "./pages/ForgotPassword";
-import FriendRequestsPage from "./pages/FriendRequests";
 import FriendsPage from "./pages/Friends";
 import Login from "./pages/Login";
 import MatchDetail from "./pages/MatchDetail";
@@ -38,28 +37,25 @@ export default function App() {
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-
               {/* Private */}
               <Route element={<ProtectedRoute />}>
                 <Route element={<AuthedShell />}>
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/matches" element={<MatchesPage />} />
-                  <Route path="/matches/:id" element={<MatchDetail />} />
                   <Route path="/matches/new" element={<NewMatchPage />} />
+                  <Route path="/matches/:id" element={<MatchDetail />} />
                   <Route path="/games/new" element={<AddGamePage />} />
-                  <Route path="/friends" element={<FriendsPage />} />   
-                  <Route path="/friends/requests" element={<FriendRequestsPage />} />
+                  <Route path="/friends" element={<FriendsPage />} />
                   <Route path="/profile/me" element={<ProfilePage />} />
                   <Route path="/notifications" element={<NotificationsPage />} />
-                  {/* TODO: /matches/new, /matches, /profile/:id */}
                 </Route>
               </Route>
 
-              {/* 404 */}
-              <Route path="*" element={<div className="p-6">Not Found</div>} />
+              {/* 404 - handled by Netlify's 404.html */}
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </BrowserRouter>
-        </ErrorBoundary> 
+        </ErrorBoundary>
       </AuthProvider>
     </ToastProvider>
   );
