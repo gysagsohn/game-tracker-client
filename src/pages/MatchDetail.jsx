@@ -129,7 +129,7 @@ export default function MatchDetail() {
           toast.error("Match not found.");
           nav("/matches", { replace: true });
         } else if (/access denied|403/i.test(msg)) {
-          toast.error("You don’t have access to this match.");
+          toast.error("You don't have access to this match.");
           nav("/matches", { replace: true });
         } else if (/401|unauthorized/i.test(msg)) {
           nav("/login", { replace: true });
@@ -145,36 +145,6 @@ export default function MatchDetail() {
       ignore = true;
     };
   }, [id, nav, toast]);
-
-  // Derived activity log (from available fields)
-  const activityItems = useMemo(() => {
-    if (!match) return [];
-    const items = [];
-    if (match.createdAt) {
-      const by = match.createdBy
-        ? `${match.createdBy.firstName || ""} ${match.createdBy.lastName || ""}`.trim() || "Someone"
-        : "Someone";
-      items.push({ type: "created", text: `Created by ${by}`, date: match.createdAt });
-    }
-    // updates
-    if (match.updatedAt && match.updatedAt !== match.createdAt) {
-      const by = match.lastEditedBy
-        ? `${match.lastEditedBy.firstName || ""} ${match.lastEditedBy.lastName || ""}`.trim() || "Someone"
-        : "Someone";
-      items.push({ type: "updated", text: `Updated by ${by}`, date: match.updatedAt });
-    }
-    // confirmations
-    (match.players || []).forEach((p) => {
-      if (p.confirmed && p.confirmedAt) {
-        const who = p.user
-          ? `${p.user.firstName || ""} ${p.user.lastName || ""}`.trim() || p.name || "Player"
-          : p.name || "Guest";
-        items.push({ type: "confirmed", text: `${who} confirmed`, date: p.confirmedAt });
-      }
-    });
-    // sort desc
-    return items.sort((a, b) => new Date(b.date) - new Date(a.date));
-  }, [match]);
 
   // Handlers
   async function handleConfirm() {
@@ -200,6 +170,23 @@ export default function MatchDetail() {
     }
   }
 
+  async function handleDecline() {
+    if (!confirm("Are you sure you want to decline this match?")) return;
+    
+    try {
+      await api.post(`/sessions/${id}/decline`);
+      toast.success("Match declined.");
+      nav("/matches", { replace: true });
+    } catch (e) {
+      const msg = e?.message || "Failed to decline match.";
+      if (/401|unauthorized/i.test(msg)) {
+        nav("/login", { replace: true });
+        return;
+      }
+      toast.error(msg);
+    }
+  }
+
   async function handleRemind() {
     try {
       const res = await api.post(`/sessions/${id}/remind`);
@@ -216,7 +203,7 @@ export default function MatchDetail() {
   }
 
   async function handleDelete() {
-    if (!confirm("Delete this match? This can’t be undone.")) return;
+    if (!confirm("Delete this match? This can't be undone.")) return;
     try {
       await api.delete(`/sessions/${id}`);
       toast.success("Match deleted.");
@@ -261,8 +248,6 @@ export default function MatchDetail() {
       setMatch(updated);
       setEditing(false);
       toast.success("Match updated.");
-      // Optional: go back to list after save
-      // nav("/matches");
     } catch (e) {
       const msg = e?.message || "Failed to update match.";
       if (/401|unauthorized/i.test(msg)) {
@@ -395,9 +380,9 @@ export default function MatchDetail() {
                       {/* confirmation */}
                       {p.user ? (
                         p.confirmed ? (
-                          <span aria-label="Confirmed" title="Confirmed">✔︎</span>
+                          <span aria-label="Confirmed" title="Confirmed">✓</span>
                         ) : (
-                          <span aria-label="Pending" title="Pending">⧗</span>
+                          <span aria-label="Pending" title="Pending">○</span>
                         )
                       ) : (
                         <span className="text-secondary" title="Guest">Guest</span>
@@ -419,9 +404,14 @@ export default function MatchDetail() {
               {/* actions row */}
               <div className="mt-4 flex flex-wrap gap-2">
                 {canConfirm && (
-                  <Button className="btn-sm" onClick={handleConfirm}>
-                    Confirm I’m in
-                  </Button>
+                  <>
+                    <Button className="btn-sm" onClick={handleConfirm}>
+                      Confirm I'm in
+                    </Button>
+                    <Button className="btn-sm btn-warning" onClick={handleDecline}>
+                      Decline Match
+                    </Button>
+                  </>
                 )}
                 {canRemind && (
                   <Button className="btn-sm" onClick={handleRemind}>
@@ -565,7 +555,7 @@ export default function MatchDetail() {
         {/* Activity log */}
         <Card className="p-4">
           <h3 className="text-sm font-semibold mb-3">Activity</h3>
-          <ActivityLog items={activityItems} />
+          <ActivityLog session={match} />
         </Card>
 
         {/* Mobile back link */}
