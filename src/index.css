@@ -62,32 +62,84 @@
   .body-text { @apply text-primary; font-size: var(--text-body); line-height: 1.6; }
   .text-small { @apply text-secondary; font-size: var(--text-sm); line-height: 1.45; }
 
-  /* Buttons — base + variants (rounded 8px, padding 12x20, Inter 600) */
-  .btn {
-    @apply inline-flex items-center justify-center text-center select-none transition;
-    border-radius: var(--radius-standard);
-    padding: 12px 20px;
-    font-weight: 600;
-    font-family: var(--font-sans);
-  }
-  .btn-primary { @apply text-white; background: var(--color-cta); }
-  .btn-primary:hover { background: var(--color-cta-hover); }
-  .btn-primary:disabled {
-    background: var(--color-border-muted);
-    color: #FFFFFF;
-    cursor: not-allowed;
-  }
+/* Buttons — base + variants (rounded 8px, padding 12x20, Inter 600) */
+.btn {
+  @apply inline-flex items-center justify-center text-center select-none transition;
+  border-radius: var(--radius-standard);
+  padding: 12px 20px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  border: none;
+  cursor: pointer;
+}
 
-  .btn-success { @apply text-white; background: var(--color-success); }
-  .btn-success:hover { filter: brightness(1.07); }
-  .btn-success:disabled { background: var(--color-border-muted); cursor: not-allowed; }
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
 
-  .btn-warning { @apply text-white; background: var(--color-warning); }
-  .btn-warning:hover { filter: brightness(1.07); }
-  .btn-warning:disabled { background: var(--color-border-muted); cursor: not-allowed; }
+/* Primary button (blue) */
+.btn-primary { 
+  @apply text-white; 
+  background: var(--color-cta); 
+}
 
-  .btn-sm { padding: 8px 14px; font-size: 12px; border-radius: var(--radius-standard);}
+.btn-primary:hover:not(:disabled) { 
+  background: var(--color-cta-hover); 
+}
 
+.btn-primary:disabled {
+  background: var(--color-border-muted);
+  color: #FFFFFF;
+}
+
+/* Success button (green) */
+.btn-success { 
+  @apply text-white; 
+  background: var(--color-success); 
+}
+
+.btn-success:hover:not(:disabled) { 
+  filter: brightness(1.07); 
+}
+
+.btn-success:disabled { 
+  background: var(--color-border-muted);
+  color: #FFFFFF;
+}
+
+/* Warning button (red) */
+.btn-warning { 
+  @apply text-white; 
+  background: var(--color-warning); 
+}
+
+.btn-warning:hover:not(:disabled) { 
+  filter: brightness(1.07); 
+}
+
+.btn-warning:disabled { 
+  background: var(--color-border-muted);
+  color: #FFFFFF;
+}
+
+/* Secondary button (neutral/gray) */
+.btn-secondary {
+  @apply text-primary;
+  background: var(--color-card);
+  border: 1px solid var(--color-border-muted);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--color-border-muted) 20%, white);
+}
+
+/* Small button size */
+.btn-sm { 
+  padding: 8px 14px; 
+  font-size: 14px; 
+  border-radius: var(--radius-standard);
+}
 
   /* Inputs & Textareas */
   .input {
