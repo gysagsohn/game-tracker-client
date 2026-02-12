@@ -39,7 +39,6 @@ function Notifications() {
       setProcessingIds(prev => new Set(prev).add(notificationId));
       await axios.put(`/friends/notifications/${notificationId}/read`);
       
-      // ✅ FIXED: Use 'read' instead of 'isRead'
       setNotifications(prev =>
         prev.map(n =>
           n._id === notificationId ? { ...n, read: true } : n
@@ -59,7 +58,6 @@ function Notifications() {
   async function markAllAsRead() {
     try {
       await axios.post('/friends/notifications/read-all');
-      // ✅ FIXED: Use 'read' instead of 'isRead'
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       toast.success('All notifications marked as read');
     } catch {
@@ -131,12 +129,10 @@ function Notifications() {
   }
 
   async function handleNotificationClick(notification) {
-    // ✅ FIXED: Use 'read' instead of 'isRead'
     if (!notification.read) {
       await markAsRead(notification._id);
     }
 
-    // ✅ FIXED: Use 'session' instead of 'sessionId'
     // Navigate based on notification type
     switch (notification.type) {
       case NOTIFICATION_TYPES.FRIEND_REQUEST:
@@ -173,12 +169,10 @@ function Notifications() {
   }
 
   const filteredNotifications = notifications.filter(n => {
-    // ✅ FIXED: Use 'read' instead of 'isRead'
     if (filter === 'unread') return !n.read;
     return true;
   });
 
-  // ✅ FIXED: Use 'read' instead of 'isRead'
   const unreadCount = notifications.filter(n => !n.read).length;
 
   if (loading) {
@@ -265,7 +259,6 @@ function Notifications() {
                   </div>
 
                   {/* Friend Request Actions */}
-                  {/* ✅ FIXED: Use 'read' instead of 'isRead' */}
                   {isFriendRequest && notification.sender && !notification.read && (
                     <div className="flex gap-2 flex-shrink-0">
                       <Button
@@ -302,7 +295,6 @@ function Notifications() {
                   )}
 
                   {/* Match Invite Actions */}
-                  {/* ✅ FIXED: Use 'read' and 'session' instead of 'isRead' and 'sessionId' */}
                   {isMatchInvite && notification.session && !notification.read && (
                     <div className="flex gap-2 flex-shrink-0">
                       <Button
@@ -339,7 +331,6 @@ function Notifications() {
                   )}
 
                   {/* "View" button for notifications with actions but already read */}
-                  {/* ✅ FIXED: Use 'read' and 'session' instead of 'isRead' and 'sessionId' */}
                   {(isFriendRequest || isMatchInvite) && notification.read && (
                     <Button
                       variant="secondary"
@@ -358,7 +349,6 @@ function Notifications() {
                   )}
 
                   {/* Read indicator for clickable notifications */}
-                  {/* ✅ FIXED: Use 'read' instead of 'isRead' */}
                   {!notification.read && isClickable && (
                     <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2" />
                   )}

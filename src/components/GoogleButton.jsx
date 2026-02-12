@@ -5,16 +5,19 @@ function trimTrailingSlash(s = "") {
 }
 
 export default function GoogleButton({ className = "" }) {
+  // VITE_API_URL already includes /api (e.g., http://localhost:3001/api)
   const API = trimTrailingSlash(import.meta.env.VITE_API_URL || "");
 
   const handleClick = () => {
     if (!API) {
-      // Failsafe: avoid crashing if env is missing
       console.error("VITE_API_URL is not defined");
       return;
     }
-    // Optional: preserve current path for post-login redirect
-    const redirect = encodeURIComponent(window.location.pathname || "/");
+    
+    // Preserve current path for post-login redirect
+    const redirect = encodeURIComponent(window.location.pathname || "/dashboard");
+    
+    // API already has /api, so just add /auth/google
     window.location.href = `${API}/auth/google?redirect=${redirect}`;
   };
 
