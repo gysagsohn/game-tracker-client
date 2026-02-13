@@ -14,11 +14,14 @@ export default function GoogleButton({ className = "" }) {
       return;
     }
     
-    // Preserve current path for post-login redirect
+    // ✅ DEBUG: Log the full URL
     const redirect = encodeURIComponent(window.location.pathname || "/dashboard");
+    const fullUrl = `${API}/auth/google?redirect=${redirect}`;
+    console.log("🔍 API:", API);
+    console.log("🔍 Full OAuth URL:", fullUrl);
     
     // API already has /api, so just add /auth/google
-    window.location.href = `${API}/auth/google?redirect=${redirect}`;
+    window.location.href = fullUrl;
   };
 
   return (
