@@ -238,15 +238,19 @@ const TabButton = ({ id, children }) => {
       </Card>
 
       {/* Feedback banners */}
-        {err && (
-        <Alert variant="error" className="mb-4 max-w-xl mx-auto">
-          {err}
-        </Alert>
+      {err && (
+        <div className="mb-4 flex justify-center px-4">
+          <Alert variant="error" style={{ width: 'auto', maxWidth: '36rem', minWidth: '300px' }}>
+            <div className="text-center">{err}</div>
+          </Alert>
+        </div>
       )}
       {ok && (
-        <Alert variant="success" className="mb-4 max-w-xl mx-auto">
-          {ok}
-        </Alert>
+        <div className="mb-4 flex justify-center px-4">
+          <Alert variant="success" style={{ width: 'auto', maxWidth: '36rem', minWidth: '300px' }}>
+            <div className="text-center">{ok}</div>
+          </Alert>
+        </div>
       )}
 
       {/* Content per tab */}
