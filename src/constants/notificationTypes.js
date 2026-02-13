@@ -1,11 +1,12 @@
 export const NOTIFICATION_TYPES = {
-  FRIEND_REQUEST: 'FRIEND_REQUEST',
-  FRIEND_ACCEPT: 'FRIEND_ACCEPT', 
-  MATCH_INVITE: 'MATCH_INVITE',
-  MATCH_UPDATED: 'MATCH_UPDATED',
-  MATCH_REMINDER: 'MATCH_REMINDER',
-  MATCH_CONFIRMED: 'MATCH_CONFIRMED',
-  MATCH_DECLINED: 'MATCH_DECLINED',
+  FRIEND_REQUEST: 'friend_request',      
+  FRIEND_ACCEPT: 'friend_accept',        
+  MATCH_INVITE: 'match_invite',          
+  MATCH_UPDATED: 'match_updated',        
+  MATCH_CONFIRMED: 'match_confirmed',    
+  MATCH_DECLINED: 'match_declined',      
+  MATCH_REMINDER: 'match_reminder',      
+  SYSTEM_ALERT: 'system_alert',          
 };
 
 export default NOTIFICATION_TYPES;

@@ -39,6 +39,7 @@ function Notifications() {
       setProcessingIds(prev => new Set(prev).add(notificationId));
       await axios.put(`/friends/notifications/${notificationId}/read`);
       
+      // Update local state immediately
       setNotifications(prev =>
         prev.map(n =>
           n._id === notificationId ? { ...n, read: true } : n
@@ -65,38 +66,44 @@ function Notifications() {
     }
   }
 
-  async function handleFriendResponse(notificationId, senderId, action) {
-    if (processingIds.has(notificationId)) return;
+async function handleFriendResponse(notificationId, senderId, action) {
+  if (processingIds.has(notificationId)) return;
 
-    try {
-      setProcessingIds(prev => new Set(prev).add(notificationId));
-      
-      await axios.post('/friends/respond', {
-        senderId: senderId,
-        action: action // 'Accepted' or 'Rejected'
-      });
+  try {
+    setProcessingIds(prev => new Set(prev).add(notificationId));
+    
 
-      // Mark notification as read
-      await markAsRead(notificationId);
+    await axios.post('/friends/respond', {
+      senderId: senderId,
+      action: action // 'Accepted' or 'Rejected'∂ç
+    });
 
-      toast.success(
-        action === 'Accepted' 
-          ? 'Friend request accepted!' 
-          : 'Friend request rejected'
-      );
 
-      // Refresh notifications to update UI
-      await fetchNotifications();
-    } catch (error) {
-      toast.error(error.message || `Failed to ${action.toLowerCase()} friend request`);
-    } finally {
-      setProcessingIds(prev => {
-        const next = new Set(prev);
-        next.delete(notificationId);
-        return next;
-      });
-    }
+    await axios.put(`/friends/notifications/${notificationId}/read`);
+
+  
+    setNotifications(prev =>
+      prev.map(n =>
+        n._id === notificationId ? { ...n, read: true } : n
+      )
+    );
+
+    toast.success(
+      action === 'Accepted' 
+        ? 'Friend request accepted!' 
+        : 'Friend request rejected'
+    );
+
+  } catch (error) {
+    toast.error(error.message || `Failed to ${action.toLowerCase()} friend request`);
+  } finally {
+    setProcessingIds(prev => {
+      const next = new Set(prev);
+      next.delete(notificationId);
+      return next;
+    });
   }
+}
 
   async function handleMatchResponse(notificationId, sessionId, action) {
     if (processingIds.has(notificationId)) return;
@@ -112,10 +119,17 @@ function Notifications() {
         toast.success('Match declined');
       }
 
-      // Mark notification as read
-      await markAsRead(notificationId);
+      // IMMEDIATELY mark as read in local state
+      setNotifications(prev =>
+        prev.map(n =>
+          n._id === notificationId ? { ...n, read: true } : n
+        )
+      );
 
-      // Refresh notifications
+      // Also mark as read on backend
+      await axios.put(`/friends/notifications/${notificationId}/read`);
+
+      // Optional: Refresh to get latest state
       await fetchNotifications();
     } catch (error) {
       toast.error(error.message || `Failed to ${action} match`);
@@ -256,9 +270,16 @@ function Notifications() {
                         minute: '2-digit'
                       })}
                     </p>
+
+                    {/* Show status for read friend requests */}
+                    {isFriendRequest && notification.read && (
+                      <p className="text-small mt-1 font-medium" style={{ color: '#57F287' }}>
+                        ✓ Responded
+                      </p>
+                    )}
                   </div>
 
-                  {/* Friend Request Actions */}
+                  {/* Friend Request Actions - ONLY show if UNREAD */}
                   {isFriendRequest && notification.sender && !notification.read && (
                     <div className="flex gap-2 flex-shrink-0">
                       <Button
@@ -294,7 +315,7 @@ function Notifications() {
                     </div>
                   )}
 
-                  {/* Match Invite Actions */}
+                  {/* Match Invite Actions - ONLY show if UNREAD */}
                   {isMatchInvite && notification.session && !notification.read && (
                     <div className="flex gap-2 flex-shrink-0">
                       <Button

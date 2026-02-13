@@ -52,16 +52,23 @@ export default function Alert({ variant = "info", title, children, onClose, clas
       style={{ borderColor: scheme.border, background: scheme.bg, color: scheme.text }}
     >
       <div className="flex items-start gap-3">
-        <div className="mt-0.5" style={{ color: scheme.iconColor }}>{scheme.icon}</div>
-        <div className="flex-1 min-w-0">
-          {title && <div className="text-sm font-semibold mb-0.5">{title}</div>}
-          <div className="text-sm">{children}</div>
+        {/* ✅ Icon - flex-shrink-0 to prevent icon from shrinking */}
+        <div className="flex-shrink-0 mt-0.5" style={{ color: scheme.iconColor }}>
+          {scheme.icon}
         </div>
+        
+        {/* ✅ Content - flex-1 with overflow-hidden and break-words */}
+        <div className="flex-1 overflow-hidden">
+          {title && <div className="text-sm font-semibold mb-0.5 break-words">{title}</div>}
+          <div className="text-sm break-words">{children}</div>
+        </div>
+        
+        {/* ✅ Close button - flex-shrink-0 to prevent button from shrinking */}
         {onClose && (
           <button
             type="button"
             onClick={onClose}
-            className="ml-2 text-secondary hover:text-primary transition-colors p-1 -mt-1 -mr-2"
+            className="flex-shrink-0 ml-2 text-secondary hover:text-primary transition-colors p-1 -mt-1 -mr-2"
             aria-label="Dismiss"
             title="Dismiss"
           >

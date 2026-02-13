@@ -8,6 +8,7 @@ import api from "../lib/axios";
 import FriendSearch from "../components/friends/FriendSearch";
 import Skeleton from "../components/ui/Skeleton";
 import { memo } from "react";
+import Alert from "../components/ui/Alert"; 
 
 const UserRow = memo(
   function UserRow({ user, right, subtitle }) {
@@ -237,28 +238,15 @@ const TabButton = ({ id, children }) => {
       </Card>
 
       {/* Feedback banners */}
-      {err && (
-        <div
-          className="mb-4 rounded-[var(--radius-standard)] border p-3 text-sm mx-auto max-w-xl"
-          style={{
-            borderColor: "color-mix(in oklab, var(--color-warning) 40%, transparent)",
-            background: "color-mix(in oklab, var(--color-warning) 10%, white)",
-            color: "var(--color-warning)",
-          }}
-        >
+        {err && (
+        <Alert variant="error" className="mb-4 max-w-xl mx-auto">
           {err}
-        </div>
+        </Alert>
       )}
       {ok && (
-        <div
-          className="mb-4 rounded-[var(--radius-standard)] border p-3 text-sm mx-auto max-w-xl"
-          style={{
-            borderColor: "color-mix(in oklab, var(--color-success) 40%, transparent)",
-            background: "color-mix(in oklab, var(--color-success) 10%, white)",
-          }}
-        >
+        <Alert variant="success" className="mb-4 max-w-xl mx-auto">
           {ok}
-        </div>
+        </Alert>
       )}
 
       {/* Content per tab */}
