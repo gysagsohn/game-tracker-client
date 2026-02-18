@@ -244,7 +244,9 @@ async function handleFriendResponse(notificationId, senderId, action) {
             const isMatchInvite = [
               NOTIFICATION_TYPES.MATCH_INVITE,
               NOTIFICATION_TYPES.MATCH_UPDATED,
-              NOTIFICATION_TYPES.MATCH_REMINDER
+              NOTIFICATION_TYPES.MATCH_REMINDER,
+              NOTIFICATION_TYPES.MATCH_CONFIRMED,
+              NOTIFICATION_TYPES.MATCH_DECLINED
             ].includes(notification.type);
             
             // Determine if notification should be clickable

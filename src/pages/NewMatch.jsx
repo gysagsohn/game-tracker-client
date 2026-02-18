@@ -203,7 +203,6 @@ export default function NewMatchPage() {
 
       const payload = {
         game: game._id,
-        // send ISO; default to today if date somehow null
         date: formatISO(date || new Date()),
         notes: notes?.trim() || undefined,
         players: players.map((p) => ({
@@ -218,11 +217,15 @@ export default function NewMatchPage() {
 
       const res = await api.post("/sessions", payload);
       const created = res?.data?.data || res?.data;
+      
+      
       toast.success("Match created!");
+      
       if (created?._id) {
-        nav(`/matches/${created._id}`);
+        nav(`/matches/${created._id}`, { replace: true }); // replace: true prevents back button issues
       } else {
-        nav("/matches");
+        // Fallback to matches list if something went wrong
+        nav("/matches", { replace: true });
       }
     } catch (e) {
       const msg = e?.message || "Failed to create match.";

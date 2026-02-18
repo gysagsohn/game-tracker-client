@@ -52,18 +52,18 @@ export default function Alert({ variant = "info", title, children, onClose, clas
       style={{ borderColor: scheme.border, background: scheme.bg, color: scheme.text }}
     >
       <div className="flex items-start gap-3">
-        {/* ✅ Icon - flex-shrink-0 to prevent icon from shrinking */}
+        {/* Icon - flex-shrink-0 to prevent icon from shrinking */}
         <div className="flex-shrink-0 mt-0.5" style={{ color: scheme.iconColor }}>
           {scheme.icon}
         </div>
         
-        {/* ✅ Content - flex-1 with overflow-hidden and break-words */}
+        {/* Content - flex-1 with overflow-hidden and break-words */}
         <div className="flex-1 overflow-hidden">
           {title && <div className="text-sm font-semibold mb-0.5 break-words">{title}</div>}
           <div className="text-sm break-words">{children}</div>
         </div>
         
-        {/* ✅ Close button - flex-shrink-0 to prevent button from shrinking */}
+        {/* Close button - flex-shrink-0 to prevent button from shrinking */}
         {onClose && (
           <button
             type="button"
