@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
+import { useAuth } from "../contexts/useAuth"; 
 import { useToast } from "../contexts/useToast";
 import api from "../lib/axios";
 
@@ -13,6 +14,7 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const toast = useToast();
   const nav = useNavigate();
+  const { setUser, setToken } = useAuth(); 
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -24,10 +26,21 @@ export default function ResetPasswordPage() {
     try {
       setLoading(true);
       const res = await api.post("/auth/reset-password", { token, password });
-      const { message } = res.data || {};
-      toast.success(message || "Password has been reset. Please log in.");
-      // Redirect to login (no auto-login after reset)
-      nav("/login", { replace: true, state: { justReset: true } });
+      
+      // HANDLE AUTO-LOGIN RESPONSE
+      const { message, token: authToken, user } = res.data || {};
+      
+      if (authToken && user) {
+        // Auto-login successful
+        setToken(authToken);
+        setUser(user);
+        toast.success(message || "Password reset successful!");
+        nav("/dashboard", { replace: true });
+      } else {
+        // Fallback (shouldn't happen with your updated backend)
+        toast.success(message || "Password has been reset. Please log in.");
+        nav("/login", { replace: true, state: { justReset: true } });
+      }
     } catch (err) {
       const msg = err?.response?.data?.message || err.message || "Reset failed.";
       toast.error(msg);

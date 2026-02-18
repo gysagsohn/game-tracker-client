@@ -4,9 +4,18 @@ import api from "../lib/axios";
 import { tokenStorage } from "../utils/tokenStorage";
 
 export default function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => tokenStorage.get());
+  const [token, setTokenState] = useState(() => tokenStorage.get());
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const setToken = useCallback((newToken) => {
+    if (newToken) {
+      tokenStorage.set(newToken);
+    } else {
+      tokenStorage.remove();
+    }
+    setTokenState(newToken);
+  }, []);
 
   // Hydrate user from token on mount or token change
   useEffect(() => {
@@ -55,7 +64,7 @@ export default function AuthProvider({ children }) {
     return () => {
       ignore = true;
     };
-  }, [token]);
+  }, [token, setToken]);
 
   // Email and password login
   const login = useCallback(async (email, password) => {
@@ -65,13 +74,10 @@ export default function AuthProvider({ children }) {
     // Extract token and user from response
     const { token: newToken, user: newUser } = res.data;
     
-    // Persist token using centralized storage utility
-    tokenStorage.set(newToken);
-    
-    // Update state to trigger user hydration
+    // Update state using the wrapper function
     setToken(newToken);
     setUser(newUser);
-  }, []);
+  }, [setToken]);
 
   // Signup (returns response but doesn't auto-login)
   // User should be redirected to /check-email after signup
@@ -85,13 +91,24 @@ export default function AuthProvider({ children }) {
 
   // Logout function clears token and user state
   const logout = useCallback(() => {
-    tokenStorage.remove();
     setToken(null);
     setUser(null);
-  }, []);
+  }, [setToken]);
+
 
   return (
-    <AuthContext.Provider value={{ token, user, loading, login, signup, logout }}>
+    <AuthContext.Provider 
+      value={{ 
+        token, 
+        user, 
+        loading, 
+        login, 
+        signup, 
+        logout,
+        setToken,  
+        setUser    
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
