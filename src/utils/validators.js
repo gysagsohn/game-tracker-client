@@ -16,7 +16,7 @@ export function validatePasswordStrict(value = "") {
   return { ok: true };
 }
 
-// Login: prevent common mistakes, don’t block legacy pw formats
+// Login: prevent common mistakes, don't block legacy pw formats
 export function validatePasswordLogin(value = "") {
   const v = String(value);
   if (v.trim().length === 0) return { ok: false, message: "Password is required." };
@@ -33,4 +33,72 @@ export function passwordStrength(value = "") {
   if (/[^A-Za-z0-9]/.test(value)) score++;
   const label = ["Weak", "Weak", "Medium", "Strong"][score];
   return { score, label };
+}
+
+// NEW: Game name validation
+export function validateGameName(value = "") {
+  const v = String(value).trim();
+  if (!v) return { ok: false, message: "Game name is required." };
+  if (v.length < 2) return { ok: false, message: "Game name must be at least 2 characters." };
+  if (v.length > 100) return { ok: false, message: "Game name must be less than 100 characters." };
+  return { ok: true };
+}
+
+// NEW: Player count validation
+export function validatePlayerCount(min, max) {
+  const minNum = Number(min);
+  const maxNum = Number(max);
+  
+  if (!min || minNum < 1) {
+    return { ok: false, field: "minPlayers", message: "Minimum players must be at least 1." };
+  }
+  if (!max || maxNum < 1) {
+    return { ok: false, field: "maxPlayers", message: "Maximum players must be at least 1." };
+  }
+  if (minNum > maxNum) {
+    return { ok: false, field: "minPlayers", message: "Minimum players cannot exceed maximum players." };
+  }
+  if (maxNum > 100) {
+    return { ok: false, field: "maxPlayers", message: "Maximum players cannot exceed 100." };
+  }
+  
+  return { ok: true };
+}
+
+// NEW: Match validation
+// src/utils/validators.js - UPDATE validateMatch function
+
+// NEW: Match validation
+  export function validateMatch({ game, players }) {
+    const errors = {};
+    
+    if (!game) {
+      errors.game = "Please select a game.";
+    }
+    
+    if (!players || players.length < 2) {
+      errors.players = "Add at least 2 players to the match.";
+    }
+    
+    if (players && players.length >= 2) {
+      const allHaveResults = players.every(p => p.result);
+      if (!allHaveResults) {
+        errors.results = "All players must have a result (Win/Loss/Draw).";
+      }
+    }
+    
+    return {
+      ok: Object.keys(errors).length === 0,
+      errors
+    };
+  }
+
+// NEW: Name validation (first/last)
+export function validateName(value = "", fieldName = "Name") {
+  const v = String(value).trim();
+  if (!v) return { ok: false, message: `${fieldName} is required.` };
+  if (v.length < 2) return { ok: false, message: `${fieldName} must be at least 2 characters.` };
+  if (v.length > 50) return { ok: false, message: `${fieldName} must be less than 50 characters.` };
+  if (!/^[a-zA-Z\s'-]+$/.test(v)) return { ok: false, message: `${fieldName} can only contain letters, spaces, hyphens, and apostrophes.` };
+  return { ok: true };
 }

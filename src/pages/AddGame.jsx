@@ -1,10 +1,12 @@
-import { useState } from "react";
+
 import { Link, useNavigate } from "react-router-dom";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
-import Input from "../components/ui/Input";
+import FormField from "../components/forms/FormField";
 import { useAuth } from "../contexts/useAuth";
 import { useToast } from "../contexts/useToast";
+import { useFormValidation } from "../hooks/useFormValidation";
+import { validateGameName, validatePlayerCount } from "../utils/validators";
 import api from "../lib/axios";
 
 export default function AddGamePage() {
@@ -12,36 +14,67 @@ export default function AddGamePage() {
   const toast = useToast();
   const { user } = useAuth();
 
-  const [form, setForm] = useState({ 
-    name: "",
-    category: "Other",
-    minPlayers: 2,
-    maxPlayers: 4
-  });
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState("");
-
-  const onChange = (e) => {
-    const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+  // Validation function
+  const validateForm = (values) => {
+    const errors = {};
+    
+    // Validate game name
+    const nameCheck = validateGameName(values.name);
+    if (!nameCheck.ok) errors.name = nameCheck.message;
+    
+    // Validate player counts
+    const playerCheck = validatePlayerCount(values.minPlayers, values.maxPlayers);
+    if (!playerCheck.ok) {
+      errors[playerCheck.field] = playerCheck.message;
+    }
+    
+    return { ok: Object.keys(errors).length === 0, errors };
   };
+
+  // Use form validation hook
+  const {
+    values,
+    errors,
+    touched,
+    isSubmitting,
+    handleChange,
+    handleBlur,
+    setFieldTouched,
+    validateForm: validate,
+    setIsSubmitting,
+  } = useFormValidation(
+    {
+      name: "",
+      category: "Other",
+      minPlayers: 2,
+      maxPlayers: 4,
+    },
+    validateForm
+  );
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    setErr("");
     
-    if (!form.name.trim()) {
-      return setErr("Game name is required.");
+    // Mark all fields as touched to show errors
+    setFieldTouched('name', true);
+    setFieldTouched('minPlayers', true);
+    setFieldTouched('maxPlayers', true);
+    
+    // Validate form
+    const result = validate();
+    if (!result.ok) {
+      toast.error("Please fix the errors before submitting.");
+      return;
     }
 
     try {
-      setLoading(true);
+      setIsSubmitting(true);
       
-      const res = await api.post("/games", { 
-        name: form.name.trim(),
-        category: form.category,
-        minPlayers: parseInt(form.minPlayers),
-        maxPlayers: parseInt(form.maxPlayers)
+      const res = await api.post("/games", {
+        name: values.name.trim(),
+        category: values.category,
+        minPlayers: parseInt(values.minPlayers),
+        maxPlayers: parseInt(values.maxPlayers),
       });
       
       const game = res?.data?.data || res?.data;
@@ -51,20 +84,15 @@ export default function AddGamePage() {
     } catch (error) {
       console.error('Add game error:', error);
       
-      // Extract error message properly
       const msg = error?.response?.data?.message || error?.message || "Failed to add game.";
-      
       toast.error(msg);
       
-      // Check if unauthorized
       const status = error?.response?.status;
       if (status === 401 || /unauthorized/i.test(msg)) {
         nav("/login", { replace: true });
-      } else {
-        setErr(msg);
       }
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -87,25 +115,15 @@ export default function AddGamePage() {
         <h1 className="h1 mb-2">Add a game</h1>
         <p className="text-secondary mb-4">Create a new game so you can log matches against it.</p>
 
-        {err && (
-          <div
-            className="mb-4 rounded-[var(--radius-standard)] border p-3 text-sm"
-            style={{
-              borderColor: "color-mix(in oklab, var(--color-warning) 40%, transparent)",
-              background: "color-mix(in oklab, var(--color-warning) 10%, white)",
-              color: "var(--color-warning)",
-            }}
-          >
-            {err}
-          </div>
-        )}
-
         <form onSubmit={onSubmit} className="space-y-4">
-          <Input
+          <FormField
             label="Game name"
             name="name"
-            value={form.name}
-            onChange={onChange}
+            value={values.name}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            error={errors.name}
+            touched={touched.name}
             placeholder="e.g., Chess, FIFA 24, Catan"
             required
           />
@@ -113,11 +131,12 @@ export default function AddGamePage() {
           <div>
             <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-primary)' }}>
               Category
+              <span className="text-[var(--color-warning)] ml-1">*</span>
             </label>
             <select
               name="category"
-              value={form.category}
-              onChange={onChange}
+              value={values.category}
+              onChange={handleChange}
               className="input w-full"
               required
             >
@@ -133,22 +152,28 @@ export default function AddGamePage() {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Input
+            <FormField
               label="Min Players"
               name="minPlayers"
               type="number"
-              value={form.minPlayers}
-              onChange={onChange}
+              value={values.minPlayers}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={errors.minPlayers}
+              touched={touched.minPlayers}
               min="1"
               max="100"
               required
             />
-            <Input
+            <FormField
               label="Max Players"
               name="maxPlayers"
               type="number"
-              value={form.maxPlayers}
-              onChange={onChange}
+              value={values.maxPlayers}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={errors.maxPlayers}
+              touched={touched.maxPlayers}
               min="1"
               max="100"
               required
@@ -156,8 +181,13 @@ export default function AddGamePage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button type="submit" className="btn-primary" disabled={loading || !form.name.trim()}>
-              {loading ? "Adding…" : "Add game"}
+            <Button
+              type="submit"
+              className="btn-primary"
+              disabled={isSubmitting || !values.name.trim()}
+              loading={isSubmitting}
+            >
+              Add game
             </Button>
             <Link to="/matches/new" className="underline text-sm" style={{ color: "var(--color-cta)" }}>
               Cancel

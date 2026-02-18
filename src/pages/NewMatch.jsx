@@ -6,11 +6,14 @@ import GameSelect from "../components/forms/GameSelect";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import Input from "../components/ui/Input";
+import Alert from "../components/ui/Alert";
 import { useAuth } from "../contexts/useAuth";
 import { useToast } from "../contexts/useToast";
+import { validateMatch } from "../utils/validators";
 import api from "../lib/axios";
+import { FaExclamationCircle } from 'react-icons/fa';
 
-const RESULT_OPTIONS = ["Win", "Loss", "Draw"]; // must match backend enum
+const RESULT_OPTIONS = ["Win", "Loss", "Draw"];
 
 function idOf(v) {
   if (!v) return null;
@@ -25,12 +28,12 @@ export default function NewMatchPage() {
   const nav = useNavigate();
   const location = useLocation();
 
-  // Game & date (store Date object)
+  // Game & date
   const [game, setGame] = useState(null);
   const [date, setDate] = useState(() => new Date());
   const [notes, setNotes] = useState("");
 
-  // Friends (for “Add friend”)
+  // Friends
   const [friends, setFriends] = useState([]);
   const [friendsLoading, setFriendsLoading] = useState(false);
 
@@ -58,14 +61,17 @@ export default function NewMatchPage() {
     },
   ]);
 
-  // “Add friend” UI
+  // "Add friend" UI
   const [friendIdToAdd, setFriendIdToAdd] = useState("");
 
-  // “Add guest” UI
+  // "Add guest" UI
   const [guest, setGuest] = useState({ name: "", email: "", invited: false });
 
   const [saving, setSaving] = useState(false);
-  const [err, setErr] = useState("");
+  
+  // Validation errors object
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
 
   // Load friend list
   useEffect(() => {
@@ -89,11 +95,9 @@ export default function NewMatchPage() {
     };
   }, [user?._id]);
 
-  // If navigated from Add Game, you could auto-select the new game id (optional)
   useEffect(() => {
     const gid = location.state?.justAddedGameId;
     if (!gid) return;
-    // If GameSelect supports a controlled id prop you can wire it here.
   }, [location.state]);
 
   const friendOptions = useMemo(() => {
@@ -121,6 +125,16 @@ export default function NewMatchPage() {
           : r
       )
     );
+    
+    // Clear validation errors when user makes changes
+    if (errors.players || errors.results) {
+      setErrors(prev => {
+        const next = { ...prev };
+        delete next.players;
+        delete next.results;
+        return next;
+      });
+    }
   }
 
   function removePlayer(idx) {
@@ -179,7 +193,7 @@ export default function NewMatchPage() {
         result: "",
         score: "",
         invited: !!guest.invited,
-        confirmed: true, // backend auto-confirms guests
+        confirmed: true,
       },
     ]);
     setGuest({ name: "", email: "", invited: false });
@@ -187,14 +201,16 @@ export default function NewMatchPage() {
 
   async function onSubmit(e) {
     e.preventDefault();
-    setErr("");
-
-    if (!game?._id) {
-      setErr("Please select a game.");
-      return;
-    }
-    if (players.length < 1) {
-      setErr("Add at least yourself or one player.");
+    
+    // Mark fields as touched
+    setTouched({ game: true, players: true });
+    
+    // Validate form
+    const validation = validateMatch({ game, players });
+    setErrors(validation.errors);
+    
+    if (!validation.ok) {
+      toast.error("Please fix the errors before submitting.");
       return;
     }
 
@@ -217,19 +233,16 @@ export default function NewMatchPage() {
 
       const res = await api.post("/sessions", payload);
       const created = res?.data?.data || res?.data;
-      
-      
+
       toast.success("Match created!");
-      
+
       if (created?._id) {
-        nav(`/matches/${created._id}`, { replace: true }); // replace: true prevents back button issues
+        nav(`/matches/${created._id}`, { replace: true });
       } else {
-        // Fallback to matches list if something went wrong
         nav("/matches", { replace: true });
       }
     } catch (e) {
       const msg = e?.message || "Failed to create match.";
-      setErr(msg);
       toast.error(msg);
     } finally {
       setSaving(false);
@@ -243,44 +256,82 @@ export default function NewMatchPage() {
       <h1 className="h1 text-center mb-6 lg:mb-10">Log a New Match</h1>
 
       <Card className="p-6 max-w-3xl mx-auto">
-        {err && (
-          <div
-            className="mb-4 rounded-[var(--radius-standard)] border p-3 text-sm"
-            style={{
-              borderColor:
-                "color-mix(in oklab, var(--color-warning) 40%, transparent)",
-              background:
-                "color-mix(in oklab, var(--color-warning) 10%, white)",
-              color: "var(--color-warning)",
-            }}
-          >
-            {err}
-          </div>
+        {/* Show validation errors at top */}
+        {Object.keys(errors).length > 0 && touched.game && (
+          <Alert variant="error" className="mb-4">
+            <div className="space-y-1">
+              {errors.game && (
+                <div className="flex items-center gap-2">
+                  <FaExclamationCircle size={14} />
+                  <span>{errors.game}</span>
+                </div>
+              )}
+              {errors.players && (
+                <div className="flex items-center gap-2">
+                  <FaExclamationCircle size={14} />
+                  <span>{errors.players}</span>
+                </div>
+              )}
+              {errors.results && (
+                <div className="flex items-center gap-2">
+                  <FaExclamationCircle size={14} />
+                  <span>{errors.results}</span>
+                </div>
+              )}
+            </div>
+          </Alert>
         )}
 
         <form onSubmit={onSubmit} className="grid gap-5">
           {/* Game + helper link */}
           <div>
-            <GameSelect value={game} onChange={setGame} allowCreate={true} />
+            <GameSelect
+              value={game}
+              onChange={(newGame) => {
+                setGame(newGame);
+                // Clear game error when game is selected
+                if (errors.game) {
+                  setErrors(prev => {
+                    const next = { ...prev };
+                    delete next.game;
+                    return next;
+                  });
+                }
+              }}
+              allowCreate={true}
+            />
+            {/* Show inline error for game field */}
+            {touched.game && errors.game && (
+              <div className="mt-1 flex items-center gap-1 text-sm text-[var(--color-warning)]">
+                <FaExclamationCircle size={14} />
+                <span>{errors.game}</span>
+              </div>
+            )}
             <div className="mt-1">
               <Link
                 to="/games/new"
                 className="underline text-sm"
                 style={{ color: "var(--color-cta)" }}
               >
-                Can’t find your game? Add it
+                Can't find your game? Add it
               </Link>
             </div>
           </div>
 
-          {/* Date (inline box, compact calendar) */}
+          {/* Date */}
           <div className="max-w-xs">
             <DateInput label="Date" value={date} onChange={setDate} required />
           </div>
 
           {/* Players table */}
           <div>
-            <h3 className="text-sm font-semibold mb-2">Players</h3>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold">Players</h3>
+              {/* Show player count hint */}
+              <span className="text-xs text-secondary">
+                {players.length} player{players.length !== 1 ? 's' : ''} added
+              </span>
+            </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-sm">

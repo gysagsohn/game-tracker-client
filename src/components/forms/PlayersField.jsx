@@ -1,4 +1,3 @@
-// src/components/forms/PlayersField.jsx
 import { useEffect, useMemo, useState } from "react";
 import api from "../../lib/axios";
 import Button from "../ui/Button";
