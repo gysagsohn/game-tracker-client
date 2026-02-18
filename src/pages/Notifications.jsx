@@ -238,147 +238,160 @@ async function handleFriendResponse(notificationId, senderId, action) {
         </Card>
       ) : (
         <div className="space-y-3">
-          {filteredNotifications.map((notification) => {
-            const isProcessing = processingIds.has(notification._id);
-            const isFriendRequest = notification.type === NOTIFICATION_TYPES.FRIEND_REQUEST;
-            const isMatchInvite = [
-              NOTIFICATION_TYPES.MATCH_INVITE,
-              NOTIFICATION_TYPES.MATCH_UPDATED,
-              NOTIFICATION_TYPES.MATCH_REMINDER,
-              NOTIFICATION_TYPES.MATCH_CONFIRMED,
-              NOTIFICATION_TYPES.MATCH_DECLINED
-            ].includes(notification.type);
-            
-            // Determine if notification should be clickable
-            const isClickable = !isFriendRequest && !isMatchInvite;
-            
-            return (
-              <Card
-                key={notification._id}
-                className={`p-4 transition-shadow ${
-                  isClickable ? 'cursor-pointer hover:shadow-md' : ''
-                } ${notification.read ? 'opacity-70' : 'bg-blue-50'}`}
-                onClick={() => isClickable && handleNotificationClick(notification)}
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <p className="body-text break-words">
-                      {notification.message}
+        {filteredNotifications.map((notification) => {
+          const isProcessing = processingIds.has(notification._id);
+          const isFriendRequest = notification.type === NOTIFICATION_TYPES.FRIEND_REQUEST;
+          const isMatchInvite = notification.type === NOTIFICATION_TYPES.MATCH_INVITE;
+          const isMatchInfo = [
+            NOTIFICATION_TYPES.MATCH_CONFIRMED,
+            NOTIFICATION_TYPES.MATCH_DECLINED,
+            NOTIFICATION_TYPES.MATCH_UPDATED,
+            NOTIFICATION_TYPES.MATCH_REMINDER
+          ].includes(notification.type);
+          
+          const isClickable = !isFriendRequest && !isMatchInvite;
+          
+          return (
+            <Card
+              key={notification._id}
+              className={`p-4 transition-shadow ${
+                isClickable ? 'cursor-pointer hover:shadow-md' : ''
+              } ${notification.read ? 'opacity-70' : 'bg-blue-50'}`}
+              onClick={() => isClickable && handleNotificationClick(notification)}
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <p className="body-text break-words">
+                    {notification.message}
+                  </p>
+                  <p className="text-small text-secondary mt-1">
+                    {new Date(notification.createdAt).toLocaleDateString()} at{' '}
+                    {new Date(notification.createdAt).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+
+                  {/* Show status for read friend requests */}
+                  {isFriendRequest && notification.read && (
+                    <p className="text-small mt-1 font-medium" style={{ color: '#57F287' }}>
+                      ✓ Responded
                     </p>
-                    <p className="text-small text-secondary mt-1">
-                      {new Date(notification.createdAt).toLocaleDateString()} at{' '}
-                      {new Date(notification.createdAt).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </p>
-
-                    {/* Show status for read friend requests */}
-                    {isFriendRequest && notification.read && (
-                      <p className="text-small mt-1 font-medium" style={{ color: '#57F287' }}>
-                        ✓ Responded
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Friend Request Actions - ONLY show if UNREAD */}
-                  {isFriendRequest && notification.sender && !notification.read && (
-                    <div className="flex gap-2 flex-shrink-0">
-                      <Button
-                        variant="success"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleFriendResponse(
-                            notification._id,
-                            notification.sender._id,
-                            'Accepted'
-                          );
-                        }}
-                        disabled={isProcessing}
-                      >
-                        {isProcessing ? 'Processing...' : 'Accept'}
-                      </Button>
-                      <Button
-                        variant="warning"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleFriendResponse(
-                            notification._id,
-                            notification.sender._id,
-                            'Rejected'
-                          );
-                        }}
-                        disabled={isProcessing}
-                      >
-                        Reject
-                      </Button>
-                    </div>
                   )}
+                </div>
 
-                  {/* Match Invite Actions - ONLY show if UNREAD */}
-                  {isMatchInvite && notification.session && !notification.read && (
-                    <div className="flex gap-2 flex-shrink-0">
-                      <Button
-                        variant="success"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleMatchResponse(
-                            notification._id,
-                            notification.session,
-                            'confirm'
-                          );
-                        }}
-                        disabled={isProcessing}
-                      >
-                        {isProcessing ? 'Confirming...' : 'Confirm'}
-                      </Button>
-                      <Button
-                        variant="warning"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleMatchResponse(
-                            notification._id,
-                            notification.session,
-                            'decline'
-                          );
-                        }}
-                        disabled={isProcessing}
-                      >
-                        Decline
-                      </Button>
-                    </div>
-                  )}
-
-                  {/* "View" button for notifications with actions but already read */}
-                  {(isFriendRequest || isMatchInvite) && notification.read && (
+                {/* Friend Request Actions - ONLY show if UNREAD */}
+                {isFriendRequest && notification.sender && !notification.read && (
+                  <div className="flex gap-2 flex-shrink-0">
                     <Button
-                      variant="secondary"
+                      variant="success"
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (isFriendRequest) {
-                          navigate('/friends?tab=requests');
-                        } else if (notification.session) {
-                          navigate(`/matches/${notification.session}`);
-                        }
+                        handleFriendResponse(
+                          notification._id,
+                          notification.sender._id,
+                          'Accepted'
+                        );
                       }}
+                      disabled={isProcessing}
                     >
-                      View
+                      {isProcessing ? 'Processing...' : 'Accept'}
                     </Button>
-                  )}
+                    <Button
+                      variant="warning"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleFriendResponse(
+                          notification._id,
+                          notification.sender._id,
+                          'Rejected'
+                        );
+                      }}
+                      disabled={isProcessing}
+                    >
+                      Reject
+                    </Button>
+                  </div>
+                )}
 
-                  {/* Read indicator for clickable notifications */}
-                  {!notification.read && isClickable && (
-                    <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2" />
-                  )}
-                </div>
-              </Card>
-            );
-          })}
+                {/* Match Invite Actions - ONLY for MATCH_INVITE and UNREAD */}
+                {isMatchInvite && notification.session && !notification.read && (
+                  <div className="flex gap-2 flex-shrink-0">
+                    <Button
+                      variant="success"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleMatchResponse(
+                          notification._id,
+                          notification.session,
+                          'confirm'
+                        );
+                      }}
+                      disabled={isProcessing}
+                    >
+                      {isProcessing ? 'Confirming...' : 'Confirm'}
+                    </Button>
+                    <Button
+                      variant="warning"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleMatchResponse(
+                          notification._id,
+                          notification.session,
+                          'decline'
+                        );
+                      }}
+                      disabled={isProcessing}
+                    >
+                      Decline
+                    </Button>
+                  </div>
+                )}
+
+                {/* View button for informational match notifications */}
+                {isMatchInfo && notification.session && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/matches/${notification.session}`);
+                    }}
+                  >
+                    View Match
+                  </Button>
+                )}
+
+                {/* "View" button for already-responded friend requests or match invites */}
+                {((isFriendRequest && notification.read) || (isMatchInvite && notification.read)) && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (isFriendRequest) {
+                        navigate('/friends?tab=requests');
+                      } else if (notification.session) {
+                        navigate(`/matches/${notification.session}`);
+                      }
+                    }}
+                  >
+                    View
+                  </Button>
+                )}
+
+                {/* Read indicator for clickable notifications */}
+                {!notification.read && isClickable && (
+                  <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2" />
+                )}
+              </div>
+            </Card>
+          );
+        })}
         </div>
       )}
     </div>
