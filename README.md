@@ -118,7 +118,8 @@ game-tracker-client/
 │   │   ├── Notifications.jsx
 │   │   └── AddGame.jsx
 │   ├── utils/
-│   │   └── validators.js       # Form validation helpers
+│   │   ├── validators.js       # Form validation helpers
+│   │   └── tokenStorage.js     # Token management utility
 │   ├── constants/
 │   │   └── notificationTypes.js
 │   ├── App.jsx                 # Route configuration
@@ -141,20 +142,26 @@ game-tracker-client/
 ## Features
 
 ### Authentication & Authorization
-- Email/password authentication with JWT tokens
+- Email/password authentication with JWT tokens (7-day expiry)
 - Google OAuth integration via Passport.js
 - Email verification required before login
-- Password reset flow with secure token validation
+- **Secure password reset with auto-login** (February 2026)
+  - Single-use tokens with 15-minute expiry
+  - Automatic login after successful password reset
+  - Seamless UX without extra login step
 - Session persistence with localStorage
 - Protected routes with automatic redirect on 401
+- Automatic token refresh on API errors
 - Client-side validation with inline error messages
-- Password strength indicator on signup
+- Password strength indicator with real-time feedback
 - CapsLock warning on password fields
 - Show/hide password toggle
+- Remember me functionality (7-day tokens)
 
 ### User Management
 - User profile with editable fields (firstName, lastName)
 - Profile statistics (total matches, wins, losses, draws, most played game)
+- Favorite opponent tracking with win rates
 - Account deletion with confirmation
 - Password change functionality
 - Activity logging for audit trails
@@ -165,6 +172,7 @@ game-tracker-client/
 - Match confirmation workflow (requires all players to confirm)
 - Match editing (creator only)
 - Match deletion (creator only)
+- Decline match invitations with automatic player removal
 - Detailed match view with activity log
 - Score tracking per player
 - Result tracking (Win/Loss/Draw)
@@ -173,7 +181,7 @@ game-tracker-client/
 - Email reminders for unconfirmed matches (rate limited: 1 per 6 hours)
 
 ### Friend System
-- Search for users by name or email (debounced, 2-char minimum)
+- Search for users by name or email (debounced, 2-char minimum, rate limited)
 - Send friend requests via email
 - Accept/reject friend requests
 - View friends list
@@ -184,18 +192,20 @@ game-tracker-client/
 
 ### Notifications
 - In-app notification system with badge counts
-- Notification types: friend requests, match invites, match updates, confirmations
+- Notification types: friend requests, match invites, match updates, confirmations, declines
 - Paginated notification list
 - Mark individual notifications as read
 - Mark all notifications as read
 - Filter by read/unread status
 - Real-time unread count on navigation
+- Inline action buttons (accept/decline)
 
 ### Games Library
 - Browse available games
 - Create custom games
 - Game search and selection dropdown with autocomplete
 - Quick "Add Game" option from match creation flow
+- Game categories (Card, Board, Dice, Word, Strategy, Trivia, Party)
 
 ### UI/UX Features
 - Mobile-first responsive design
@@ -209,6 +219,7 @@ game-tracker-client/
 - Loading spinners on async actions
 - Disabled buttons during API calls
 - Custom 404 page
+- Rate limit error handling with user-friendly messages
 
 ---
 
@@ -257,16 +268,18 @@ All colors and spacing follow a consistent design token system defined in `index
 **AuthContext** (`src/contexts/AuthProvider.jsx`)
 - Manages user authentication state
 - Provides `token`, `user`, `loading` state
-- Provides `login()`, `signup()`, `logout()` functions
+- Provides `login()`, `signup()`, `logout()`, `setToken()`, `setUser()` functions
 - Automatically hydrates user from token on app load
 - Handles token expiry and automatic logout
+- Supports manual token/user updates (for password reset auto-login)
 
 **ToastContext** (`src/contexts/ToastProvider.jsx`)
 - Global toast notification system
 - Provides `toast.success()`, `toast.error()`, `toast.info()`, `toast.loading()`
-- Auto-dismisses after configurable duration
+- Auto-dismisses after configurable duration (3 seconds default)
 - Supports manual dismissal
 - Limits to 6 simultaneous toasts
+- Position: bottom-right on desktop, bottom-center on mobile
 
 ### API Client
 
@@ -274,19 +287,26 @@ All colors and spacing follow a consistent design token system defined in `index
 ```javascript
 // Automatic token injection
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
+  const token = tokenStorage.get();
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-// Automatic 401 handling
+// Automatic 401 handling + rate limit errors
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem("token");
+      tokenStorage.remove();
       window.location.href = "/login";
     }
+    
+    // Rate limit errors (429) handled gracefully
+    if (error.response?.status === 429) {
+      const message = error.response?.data?.message || "Too many requests. Please try again later.";
+      // Toast shown by calling component
+    }
+    
     return Promise.reject(new Error(error.response?.data?.message || error.message));
   }
 );
@@ -302,9 +322,32 @@ All routes under `/dashboard`, `/matches`, `/friends`, `/profile`, `/notificatio
 - `/signup` - Registration page
 - `/verify-email` - Email verification handler
 - `/forgot-password` - Password reset request
-- `/reset-password` - Password reset form
+- `/reset-password` - Password reset form (with auto-login)
 - `/check-email` - Email verification pending page
 - `/oauth-success` - OAuth callback handler
+
+---
+
+## Security Features
+
+### Backend Integration
+Game Tracker frontend integrates with a production-ready backend with enterprise-grade security:
+
+**Security Features (Backend):**
+- OAuth redirect validation (phishing prevention)
+- Single-use password reset tokens with auto-login
+- Email verification race condition prevention
+- Comprehensive rate limiting (5 different limiters)
+- Input sanitization (XSS/NoSQL injection prevention)
+
+**Frontend Security Measures:**
+- JWT tokens stored in localStorage (consider httpOnly cookies for enhanced security in future)
+- Automatic token cleanup on 401/403 responses
+- Protected routes with authentication checks
+- CSRF protection via SameSite cookies (backend)
+- Input validation before submission
+- Password strength indicators
+- Rate limit error handling with user-friendly messages
 
 ---
 
@@ -363,6 +406,7 @@ npm run lint     # Run ESLint for code quality checks
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `VITE_API_URL` | Backend API base URL | `http://localhost:3001` or `https://your-api.com` |
+
 
 ---
 
@@ -446,13 +490,15 @@ npm run preview
 
 ### Best Practices Followed
 - Component-based architecture with single responsibility
-- Custom hooks for reusable logic
+- Custom hooks for reusable logic (`useAuth`, `useToast`, `useFormValidation`)
 - Context API for global state management
 - Error boundaries for graceful error handling
 - Loading states with skeleton components
 - Proper form validation with user feedback
 - Accessible form labels and ARIA attributes
 - Responsive design with mobile-first approach
+- Centralized API client configuration
+- Token storage abstraction (`tokenStorage.js`)
 
 ---
 
@@ -463,16 +509,19 @@ npm run preview
 - No offline support (requires internet connection)
 - Token stored in localStorage (future: httpOnly cookies for enhanced security)
 - No automatic token refresh (tokens expire after 7 days)
-
+- Rate limiting handled by backend (no client-side retry logic)
 
 ### Future Improvements
 - WebSocket integration for real-time notifications
-- Service worker for offline support
-- Refresh token mechanism
-- Enhanced keyboard navigation and accessibility
-- Comprehensive test coverage (unit + integration + E2E)
+- Service worker for offline support and PWA capabilities
+- Refresh token mechanism (access token + refresh token pattern)
+- Enhanced keyboard navigation and accessibility (WCAG 2.1 AA compliance)
+- Comprehensive test coverage (unit + integration + E2E with Vitest/Playwright)
 - Code splitting for improved initial load time
 - React.memo optimization to prevent unnecessary re-renders
+- Optimistic UI updates for better perceived performance
+- Client-side caching with React Query or SWR
+- Image optimization and lazy loading
 
 ---
 
@@ -481,14 +530,16 @@ npm run preview
 This is a portfolio project, but feedback and suggestions are welcome:
 1. Open an issue for bugs or feature requests
 2. Fork the repository
-3. Create a feature branch
-4. Submit a pull request with clear description
+3. Create a feature branch (`git checkout -b feature/amazing-feature`)
+4. Commit your changes (`git commit -m 'Add amazing feature'`)
+5. Push to the branch (`git push origin feature/amazing-feature`)
+6. Submit a pull request with clear description
 
 ---
 
 ## Related Projects
 
-- **Backend:** [game-tracker-server](https://github.com/gysagsohn/game-tracker-server) - Express + MongoDB API
+- **Backend:** [game-tracker-server](https://github.com/gysagsohn/game-tracker-server) - Express + MongoDB API with enterprise-grade security
 - **Live Application:** [https://gy-gametracker.netlify.app](https://gy-gametracker.netlify.app)
 
 ---
@@ -501,12 +552,13 @@ Full-Stack Developer
 
 Built as a portfolio project to demonstrate:
 - Full-stack MERN development
-- Production-ready deployment
-- Modern React patterns with hooks
-- Responsive UI/UX design
+- Production-ready deployment (Netlify + Render)
+- Modern React patterns with hooks and context
+- Responsive UI/UX design with Tailwind CSS
 - RESTful API integration
-- Authentication flows
+- Secure authentication flows (JWT + OAuth)
 - Real-world feature implementation
+- Integration with enterprise-grade backend security
 
 ---
 
@@ -516,21 +568,51 @@ This project is open source and available for educational purposes.
 
 ---
 
-## Recent Updates (October 2025)
+## Recent Updates
 
-### Version 1.2 - UX & Performance Enhancements
+### Version 2.0 - Security & UX Enhancements (February 2026)
+
+**Backend Security Integration:**
+- **Password reset auto-login** - Seamless UX after successful password reset
+- **Enhanced token management** - Exposed `setToken` and `setUser` in AuthContext
+- **Rate limit error handling** - User-friendly messages for 429 responses
+- **Improved 401 handling** - Automatic logout and redirect on token expiry
+- **Better error messages** - Backend security checks surfaced to users
+
+**Frontend Improvements:**
+- **Auto-login flow** - After password reset, users automatically logged in
+- **Token storage utility** - Centralized `tokenStorage.js` for consistency
+- **Enhanced AuthProvider** - Manual token/user updates now supported
+- **Toast notifications** - Security events (rate limits, token expiry) clearly communicated
+- **Better loading states** - During authentication flows
+- **Error boundaries** - Graceful handling of API failures
+- **Match decline functionality** - Users can now decline match invitations
+
+**Code Quality:**
+- Refactored authentication flow for better maintainability
+- Consistent error handling across all API calls
+- Improved component organization
+- Enhanced inline documentation
+
+---
+
+### Version 1.2 - UX & Performance (January 2026)
 - Added skeleton loading states across all pages
 - Implemented error boundary for graceful crash handling
-- Enhanced toast notification system with better positioning and animations
+- Enhanced toast notification system with better positioning
 - Redesigned sidebar navigation with modern card layout and icons
 - Added real-time notification badges on mobile and desktop nav
 - Improved Friends page layout with centered, responsive design
 - Created reusable LogoutButton component
 - Fixed responsive header alignment on Notifications and Matches pages
-- Added comprehensive loading states for better perceived performance
+- Comprehensive loading states for better perceived performance
 
-### Version 1.1 - Profile & Security
+---
+
+### Version 1.1 - Profile & Security (December 2025)
 - Complete profile page with user statistics
 - Password change functionality
 - Account deletion with confirmation
-- Silent authentication check (no loading flash)
+- Silent authentication check (no loading flash on page load)
+- Improved form validation
+- Better mobile responsiveness
