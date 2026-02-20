@@ -145,7 +145,7 @@ game-tracker-client/
 - Email/password authentication with JWT tokens (7-day expiry)
 - Google OAuth integration via Passport.js
 - Email verification required before login
-- **Secure password reset with auto-login** (February 2026)
+- Secure password reset with auto-login
   - Single-use tokens with 15-minute expiry
   - Automatic login after successful password reset
   - Seamless UX without extra login step

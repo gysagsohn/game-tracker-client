@@ -55,40 +55,50 @@ export default function SignupPage() {
     setErrors((er) => ({ ...er, confirm: v === form.password ? "" : "Passwords do not match." }));
   };
 
-  const onSubmit = async (e) => {
-    e.preventDefault();
+const onSubmit = async (e) => {
+  e.preventDefault();
 
-    const emailErr = isEmail(form.email) ? "" : "Enter a valid email address.";
-    const pwRes = validatePasswordStrict(form.password);
-    const pwErr = pwRes.ok ? "" : pwRes.message;
-    const fnErr = form.firstName.trim() ? "" : "First name is required.";
-    const lnErr = form.lastName.trim() ? "" : "Last name is required.";
-    const confErr = confirm === form.password ? "" : "Passwords do not match.";
+  const emailErr = isEmail(form.email) ? "" : "Enter a valid email address.";
+  const pwRes = validatePasswordStrict(form.password);
+  const pwErr = pwRes.ok ? "" : pwRes.message;
+  const fnErr = form.firstName.trim() ? "" : "First name is required.";
+  const lnErr = form.lastName.trim() ? "" : "Last name is required.";
+  const confErr = confirm === form.password ? "" : "Passwords do not match.";
 
-    const nextErrors = { email: emailErr, password: pwErr, firstName: fnErr, lastName: lnErr, confirm: confErr };
-    setErrors(nextErrors);
-    if (Object.values(nextErrors).some(Boolean)) return;
+  const nextErrors = { email: emailErr, password: pwErr, firstName: fnErr, lastName: lnErr, confirm: confErr };
+  setErrors(nextErrors);
+  if (Object.values(nextErrors).some(Boolean)) return;
 
-    setLoading(true);
-    setFormError("");
+  setLoading(true);
+  setFormError("");
 
-    try {
-      await signup({
-        firstName: form.firstName.trim(),
-        lastName: form.lastName.trim(),
-        email: form.email.trim(),
-        password: form.password,
-      });
-      
-    nav(`/check-email?email=${encodeURIComponent(form.email.trim())}`, {
-        state: { email: form.email.trim() }, // also pass in state as fallback
-      });
-    } catch (err) {
-      setFormError(err.message);
-    } finally {
-      setLoading(false);
+  try {
+    const response = await signup({
+      firstName: form.firstName.trim(),
+      lastName: form.lastName.trim(),
+      email: form.email.trim(),
+      password: form.password,
+    });
+    
+    // CHECK IF EMAIL WAS SENT SUCCESSFULLY
+    if (!response.emailSent) {
+      console.warn("⚠️ Signup succeeded but verification email failed to send");
+      // Still redirect but show a warning on the next page
     }
-  };
+    
+    nav(`/check-email?email=${encodeURIComponent(form.email.trim())}`, {
+      state: { 
+        email: form.email.trim(),
+        emailSent: response.emailSent // Pass this flag
+      },
+    });
+  } catch (err) {
+    console.error("Signup error:", err);
+    setFormError(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const submitDisabled =
     loading ||
