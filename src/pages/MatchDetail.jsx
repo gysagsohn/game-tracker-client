@@ -73,7 +73,7 @@ export default function MatchDetail() {
   const [editing, setEditing] = useState(false);
   const [formPlayers, setFormPlayers] = useState([]);
   const [formNotes, setFormNotes] = useState("");
-  const [formDate, setFormDate] = useState(""); // yyyy-mm-dd
+  const [formDate, setFormDate] = useState("");
 
   const amCreator = useMemo(() => {
     const c = match?.createdBy;
@@ -81,7 +81,13 @@ export default function MatchDetail() {
     return !!myId && !!cid && cid === myId;
   }, [match, myId]);
 
-  const canEdit = amCreator || user?.role === "admin";
+  // FIX: any registered player in the match can edit (not just creator)
+  const isPlayerInMatch = useMemo(() => {
+    const ps = match?.players || [];
+    return ps.some((p) => String(idOf(p.user)) === myId);
+  }, [match, myId]);
+
+  const canEdit = isPlayerInMatch || user?.role === "admin";
 
   const me = useMemo(() => {
     const ps = match?.players || [];
@@ -108,10 +114,11 @@ export default function MatchDetail() {
         const payload = res.data?.data || res.data;
         if (!ignore) {
           setMatch(payload);
-          // prime edit form
           setFormPlayers(
             (payload?.players || []).map((p) => ({
-              user: p.user ? { _id: idOf(p.user), firstName: p.user.firstName, lastName: p.user.lastName, email: p.user.email } : null,
+              user: p.user
+                ? { _id: idOf(p.user), firstName: p.user.firstName, lastName: p.user.lastName, email: p.user.email }
+                : null,
               name: p.name || "",
               email: p.email || "",
               score: typeof p.score === "number" ? p.score : "",
@@ -123,7 +130,6 @@ export default function MatchDetail() {
           setFormDate(toDateInputValue(payload?.date));
         }
       } catch (e) {
-        // Redirects for common errors
         const msg = e?.message || "Failed to fetch match.";
         if (/not found/i.test(msg)) {
           toast.error("Match not found.");
@@ -141,20 +147,18 @@ export default function MatchDetail() {
       }
     }
     load();
-    return () => {
-      ignore = true;
-    };
+    return () => { ignore = true; };
   }, [id, nav, toast]);
 
-  // Handlers
   async function handleConfirm() {
     try {
       await api.post(`/sessions/${id}/confirm`);
-      // refresh or update local state optimistically
       setMatch((prev) => {
         if (!prev) return prev;
         const newPlayers = (prev.players || []).map((p) =>
-          String(idOf(p.user)) === myId ? { ...p, confirmed: true, confirmedAt: new Date().toISOString() } : p
+          String(idOf(p.user)) === myId
+            ? { ...p, confirmed: true, confirmedAt: new Date().toISOString() }
+            : p
         );
         const allConfirmed = newPlayers.every((p) => (p.user ? p.confirmed : true));
         return { ...prev, players: newPlayers, matchStatus: allConfirmed ? "Confirmed" : "Pending" };
@@ -162,27 +166,20 @@ export default function MatchDetail() {
       toast.success("Confirmed!");
     } catch (e) {
       const msg = e?.message || "Failed to confirm.";
-      if (/401|unauthorized/i.test(msg)) {
-        nav("/login", { replace: true });
-        return;
-      }
+      if (/401|unauthorized/i.test(msg)) { nav("/login", { replace: true }); return; }
       toast.error(msg);
     }
   }
 
   async function handleDecline() {
     if (!confirm("Are you sure you want to decline this match?")) return;
-    
     try {
       await api.post(`/sessions/${id}/decline`);
       toast.success("Match declined.");
       nav("/matches", { replace: true });
     } catch (e) {
       const msg = e?.message || "Failed to decline match.";
-      if (/401|unauthorized/i.test(msg)) {
-        nav("/login", { replace: true });
-        return;
-      }
+      if (/401|unauthorized/i.test(msg)) { nav("/login", { replace: true }); return; }
       toast.error(msg);
     }
   }
@@ -194,10 +191,7 @@ export default function MatchDetail() {
       toast.success(`Reminder sent to ${typeof count === "number" ? count : "some"} player(s).`);
     } catch (e) {
       const msg = e?.message || "Failed to send reminders.";
-      if (/401|unauthorized/i.test(msg)) {
-        nav("/login", { replace: true });
-        return;
-      }
+      if (/401|unauthorized/i.test(msg)) { nav("/login", { replace: true }); return; }
       toast.error(msg);
     }
   }
@@ -210,50 +204,61 @@ export default function MatchDetail() {
       nav("/matches", { replace: true });
     } catch (e) {
       const msg = e?.message || "Failed to delete match.";
-      if (/401|unauthorized/i.test(msg)) {
-        nav("/login", { replace: true });
-        return;
-      }
+      if (/401|unauthorized/i.test(msg)) { nav("/login", { replace: true }); return; }
       toast.error(msg);
     }
   }
 
   function onChangePlayer(idx, field, val) {
     setFormPlayers((rows) =>
-      rows.map((r, i) => (i === idx ? { ...r, [field]: field === "score" ? (val === "" ? "" : Number(val)) : val } : r))
+      rows.map((r, i) =>
+        i === idx
+          ? { ...r, [field]: field === "score" ? (val === "" ? "" : Number(val)) : val }
+          : r
+      )
     );
   }
 
+  // FIX: always send full payload — non-creators were sending undefined before
   async function handleSave() {
     try {
       const payload = {
-        // Allow creator/admin to update players, notes, and date
-        players: canEdit
-          ? formPlayers.map((p) => ({
-              user: p.user ? idOf(p.user) : null,
-              name: p.name || "",
-              email: p.email || "",
-              score: p.score === "" ? undefined : Number(p.score),
-              result: p.result || "",
-              // confirmed stays server-managed
-            }))
-          : undefined,
-        notes: canEdit ? formNotes : undefined,
-        date: canEdit && formDate ? new Date(formDate).toISOString() : undefined,
+        players: formPlayers.map((p) => ({
+          user: p.user ? idOf(p.user) : null,
+          name: p.name || "",
+          email: p.email || "",
+          score: p.score === "" ? undefined : Number(p.score),
+          result: p.result || "",
+          // confirmed is server-managed, intentionally omitted
+        })),
+        notes: formNotes,
+        date: formDate ? new Date(formDate).toISOString() : undefined,
       };
 
       const res = await api.put(`/sessions/${id}`, payload);
       const updated = res.data?.data || res.data;
 
       setMatch(updated);
+      // Re-sync form from fresh server data so confirmed states are accurate
+      setFormPlayers(
+        (updated?.players || []).map((p) => ({
+          user: p.user
+            ? { _id: idOf(p.user), firstName: p.user.firstName, lastName: p.user.lastName, email: p.user.email }
+            : null,
+          name: p.name || "",
+          email: p.email || "",
+          score: typeof p.score === "number" ? p.score : "",
+          result: p.result || "",
+          confirmed: !!p.confirmed,
+        }))
+      );
+      setFormNotes(updated?.notes || "");
+      setFormDate(toDateInputValue(updated?.date));
       setEditing(false);
       toast.success("Match updated.");
     } catch (e) {
       const msg = e?.message || "Failed to update match.";
-      if (/401|unauthorized/i.test(msg)) {
-        nav("/login", { replace: true });
-        return;
-      }
+      if (/401|unauthorized/i.test(msg)) { nav("/login", { replace: true }); return; }
       toast.error(msg);
     }
   }
@@ -366,7 +371,6 @@ export default function MatchDetail() {
                       title={p.user ? (p.confirmed ? "Confirmed" : "Pending confirmation") : "Guest"}
                     >
                       <span className="font-medium">{p.name || "Player"}</span>
-                      {/* result chip */}
                       {p.result && (
                         <span
                           className="inline-flex items-center rounded-full border px-2 py-0.5"
@@ -375,9 +379,7 @@ export default function MatchDetail() {
                           {p.result}
                         </span>
                       )}
-                      {/* score */}
                       {typeof p.score === "number" && <span>Score: {p.score}</span>}
-                      {/* confirmation */}
                       {p.user ? (
                         p.confirmed ? (
                           <span aria-label="Confirmed" title="Confirmed">✓</span>
@@ -386,12 +388,6 @@ export default function MatchDetail() {
                         )
                       ) : (
                         <span className="text-secondary" title="Guest">Guest</span>
-                      )}
-                      {/* hint for guardrails */}
-                      {!canEdit && !p.user && (
-                        <span className="text-secondary" title="Only the match creator can edit guest players.">
-                          (creator-only)
-                        </span>
                       )}
                       {myRow && !p.confirmed && (
                         <span className="text-secondary" title="You can confirm below.">(you)</span>
@@ -435,6 +431,7 @@ export default function MatchDetail() {
           {/* edit mode */}
           {editing && (
             <div className="space-y-4">
+              {/* Date only editable by creator */}
               {amCreator && (
                 <div className="max-w-xs">
                   <label className="mb-1 block text-sm text-secondary">Match date</label>
@@ -460,9 +457,9 @@ export default function MatchDetail() {
                   <tbody>
                     {formPlayers.map((p, idx) => {
                       const isGuest = !p.user;
-                      const rowEditable = canEdit && (amCreator || !isGuest ? canEdit : amCreator);
-                      // Guardrail: guests editable only by creator/admin
+                      // FIX: guests can only be edited by creator/admin, all registered rows editable by any player
                       const disableGuestForNonCreator = isGuest && !amCreator && user?.role !== "admin";
+                      const rowEditable = canEdit && !disableGuestForNonCreator;
 
                       return (
                         <tr key={idx} className="border-t" style={{ borderColor: "var(--color-border-muted)" }}>
@@ -471,7 +468,9 @@ export default function MatchDetail() {
                             {p.user ? (
                               <div className="text-xs text-secondary">{p.user.email}</div>
                             ) : (
-                              <div className="text-xs text-secondary">Guest{p.email ? ` • ${p.email}` : ""}</div>
+                              <div className="text-xs text-secondary">
+                                Guest{p.email ? ` • ${p.email}` : ""}
+                              </div>
                             )}
                           </td>
                           <td className="py-2 pr-2">
@@ -480,7 +479,7 @@ export default function MatchDetail() {
                               className="input"
                               value={p.score}
                               onChange={(e) => onChangePlayer(idx, "score", e.target.value)}
-                              disabled={!rowEditable || disableGuestForNonCreator}
+                              disabled={!rowEditable}
                               placeholder="—"
                             />
                           </td>
@@ -489,7 +488,7 @@ export default function MatchDetail() {
                               className="input"
                               value={p.result || ""}
                               onChange={(e) => onChangePlayer(idx, "result", e.target.value)}
-                              disabled={!rowEditable || disableGuestForNonCreator}
+                              disabled={!rowEditable}
                             >
                               <option value="">—</option>
                               <option value="Win">Win</option>
@@ -500,7 +499,7 @@ export default function MatchDetail() {
                           <td className="py-2 pr-2">
                             <span className="text-xs text-secondary">{isGuest ? "Guest" : "User"}</span>
                             {disableGuestForNonCreator && (
-                              <div className="text-xs text-secondary">Creator-only for guests</div>
+                              <div className="text-xs text-secondary">Creator-only</div>
                             )}
                           </td>
                         </tr>
@@ -517,7 +516,6 @@ export default function MatchDetail() {
                   rows={3}
                   value={formNotes}
                   onChange={(e) => setFormNotes(e.target.value)}
-                  disabled={!canEdit}
                   placeholder="Add any notes…"
                 />
               </div>
@@ -529,10 +527,11 @@ export default function MatchDetail() {
                 <button
                   className="btn btn-sm"
                   onClick={() => {
-                    // reset form from current match
                     setFormPlayers(
                       (match?.players || []).map((p) => ({
-                        user: p.user ? { _id: idOf(p.user), firstName: p.user.firstName, lastName: p.user.lastName, email: p.user.email } : null,
+                        user: p.user
+                          ? { _id: idOf(p.user), firstName: p.user.firstName, lastName: p.user.lastName, email: p.user.email }
+                          : null,
                         name: p.name || "",
                         email: p.email || "",
                         score: typeof p.score === "number" ? p.score : "",

@@ -21,9 +21,6 @@ export default defineConfig(({ mode }) => {
           target: env.VITE_API_URL || "http://localhost:3001",
           changeOrigin: true,
           secure: false, // Allow self-signed certs in dev
-          // Don't rewrite - keep /api prefix
-          // rewrite: (path) => path.replace(/^\/api/, ""), // ❌ Remove this
-        },
       },
     },
   };
