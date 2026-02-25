@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import Card from "../components/ui/Card";
 import Skeleton from "../components/ui/Skeleton";
 import MatchCard from "../components/matches/MatchCard";
@@ -16,6 +16,7 @@ function idOf(v) {
 export default function MatchesPage() {
   const { user } = useAuth();
   const myId = user?._id ? String(user._id) : null;
+  const location = useLocation(); // FIX: track navigation so we re-fetch on return
 
   const [loading, setLoading] = useState(true);
   const [matches, setMatches] = useState([]);
@@ -25,7 +26,7 @@ export default function MatchesPage() {
   const [remindingId, setRemindingId] = useState(null);
   const [remindMsg, setRemindMsg] = useState("");
 
-  // Load my sessions
+
   useEffect(() => {
     let ignore = false;
     async function load() {
@@ -45,7 +46,7 @@ export default function MatchesPage() {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [location.key]);
 
   // Derived list with filters
   const list = useMemo(() => {
@@ -149,8 +150,7 @@ export default function MatchesPage() {
         <div
           className="mb-4 rounded-[var(--radius-standard)] border p-3 text-sm mx-auto max-w-lg"
           style={{
-            borderColor:
-              "color-mix(in oklab, var(--color-warning) 40%, transparent)",
+            borderColor: "color-mix(in oklab, var(--color-warning) 40%, transparent)",
             background: "color-mix(in oklab, var(--color-warning) 10%, white)",
             color: "var(--color-warning)",
           }}
@@ -162,8 +162,7 @@ export default function MatchesPage() {
         <div
           className="mb-4 rounded-[var(--radius-standard)] border p-3 text-sm mx-auto max-w-lg"
           style={{
-            borderColor:
-              "color-mix(in oklab, var(--color-success) 40%, transparent)",
+            borderColor: "color-mix(in oklab, var(--color-success) 40%, transparent)",
             background: "color-mix(in oklab, var(--color-success) 10%, white)",
           }}
         >

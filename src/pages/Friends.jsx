@@ -112,23 +112,53 @@ export default function FriendsPage() {
     [friends.length, requests.length, sent.length, suggested.length]
   );
 
-  const accept = async (senderId) => {
-    try {
-      setErr(""); setOk("");
-      await api.post("/friends/respond", { senderId, action: "Accepted" });
-      setRequests((prev) => prev.filter((r) => r.user?._id !== senderId));
-      setOk("Friend request accepted.");
-    } catch (e) { setErr(e.message || "Failed to accept."); }
-  };
+const accept = async (senderId) => {
+  try {
+    setErr(""); setOk("");
+    await api.post("/friends/respond", { senderId, action: "Accepted" });
+    setRequests((prev) => prev.filter((r) => r.user?._id !== senderId));
+    setOk("Friend request accepted.");
 
-  const reject = async (senderId) => {
+    // Mark the related friend_request notification as read
     try {
-      setErr(""); setOk("");
-      await api.post("/friends/respond", { senderId, action: "Rejected" });
-      setRequests((prev) => prev.filter((r) => r.user?._id !== senderId));
-      setOk("Friend request rejected.");
-    } catch (e) { setErr(e.message || "Failed to reject."); }
-  };
+      const res = await api.get("/friends/notifications");
+      const notifications = res.data?.data || [];
+      const related = notifications.find(
+        n => n.type === "friend_request" && !n.read &&
+             n.sender && String(n.sender._id) === String(senderId)
+      );
+      if (related) {
+        await api.put(`/friends/notifications/${related._id}/read`);
+      }
+    } catch {
+      // Non-critical — don't surface this error to the user
+    }
+  } catch (e) { setErr(e.message || "Failed to accept."); }
+};
+
+const reject = async (senderId) => {
+  try {
+    setErr(""); setOk("");
+    await api.post("/friends/respond", { senderId, action: "Rejected" });
+    setRequests((prev) => prev.filter((r) => r.user?._id !== senderId));
+    setOk("Friend request rejected.");
+
+    // Mark the related friend_request notification as read
+    try {
+      const res = await api.get("/friends/notifications");
+      const notifications = res.data?.data || [];
+      const related = notifications.find(
+        n => n.type === "friend_request" && !n.read &&
+             n.sender && String(n.sender._id) === String(senderId)
+      );
+      if (related) {
+        await api.put(`/friends/notifications/${related._id}/read`);
+      }
+    } catch {
+      // Non-critical
+    }
+  } catch (e) { setErr(e.message || "Failed to reject."); }
+};
 
   const unfriend = async (friendId) => {
     try {

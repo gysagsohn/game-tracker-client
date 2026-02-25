@@ -56,6 +56,12 @@ function badgeStyles(result) {
     background: "color-mix(in oklab, var(--color-border-muted) 12%, white)",
   };
 }
+function extractMatch(responseData) {
+  if (!responseData) return null;
+  if (responseData.data && responseData.data._id) return responseData.data;
+  if (responseData._id) return responseData;
+  return null;
+}
 
 export default function MatchDetail() {
   const { id } = useParams();
@@ -71,6 +77,7 @@ export default function MatchDetail() {
 
   // edit state
   const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false); 
   const [formPlayers, setFormPlayers] = useState([]);
   const [formNotes, setFormNotes] = useState("");
   const [formDate, setFormDate] = useState("");
@@ -81,7 +88,6 @@ export default function MatchDetail() {
     return !!myId && !!cid && cid === myId;
   }, [match, myId]);
 
-  // FIX: any registered player in the match can edit (not just creator)
   const isPlayerInMatch = useMemo(() => {
     const ps = match?.players || [];
     return ps.some((p) => String(idOf(p.user)) === myId);
@@ -103,6 +109,23 @@ export default function MatchDetail() {
 
   const canRemind = amCreator && match?.matchStatus === "Pending" && hasUnconfirmedOthers;
 
+  function syncFormFromMatch(payload) {
+    setFormPlayers(
+      (payload?.players || []).map((p) => ({
+        user: p.user
+          ? { _id: idOf(p.user), firstName: p.user.firstName, lastName: p.user.lastName, email: p.user.email }
+          : null,
+        name: p.name || "",
+        email: p.email || "",
+        score: typeof p.score === "number" ? p.score : "",
+        result: p.result || "",
+        confirmed: !!p.confirmed,
+      }))
+    );
+    setFormNotes(payload?.notes || "");
+    setFormDate(toDateInputValue(payload?.date));
+  }
+
   // Load
   useEffect(() => {
     let ignore = false;
@@ -111,26 +134,13 @@ export default function MatchDetail() {
         setLoading(true);
         setError("");
         const res = await api.get(`/sessions/${id}`);
-        const payload = res.data?.data || res.data;
+        const payload = extractMatch(res.data);
         if (!ignore) {
           setMatch(payload);
-          setFormPlayers(
-            (payload?.players || []).map((p) => ({
-              user: p.user
-                ? { _id: idOf(p.user), firstName: p.user.firstName, lastName: p.user.lastName, email: p.user.email }
-                : null,
-              name: p.name || "",
-              email: p.email || "",
-              score: typeof p.score === "number" ? p.score : "",
-              result: p.result || "",
-              confirmed: !!p.confirmed,
-            }))
-          );
-          setFormNotes(payload?.notes || "");
-          setFormDate(toDateInputValue(payload?.date));
+          syncFormFromMatch(payload);
         }
       } catch (e) {
-        const msg = e?.message || "Failed to fetch match.";
+        const msg = e?.response?.data?.message || e?.message || "Failed to fetch match.";
         if (/not found/i.test(msg)) {
           toast.error("Match not found.");
           nav("/matches", { replace: true });
@@ -165,7 +175,7 @@ export default function MatchDetail() {
       });
       toast.success("Confirmed!");
     } catch (e) {
-      const msg = e?.message || "Failed to confirm.";
+      const msg = e?.response?.data?.message || e?.message || "Failed to confirm.";
       if (/401|unauthorized/i.test(msg)) { nav("/login", { replace: true }); return; }
       toast.error(msg);
     }
@@ -178,7 +188,7 @@ export default function MatchDetail() {
       toast.success("Match declined.");
       nav("/matches", { replace: true });
     } catch (e) {
-      const msg = e?.message || "Failed to decline match.";
+      const msg = e?.response?.data?.message || e?.message || "Failed to decline match.";
       if (/401|unauthorized/i.test(msg)) { nav("/login", { replace: true }); return; }
       toast.error(msg);
     }
@@ -190,7 +200,7 @@ export default function MatchDetail() {
       const count = res?.data?.data?.count;
       toast.success(`Reminder sent to ${typeof count === "number" ? count : "some"} player(s).`);
     } catch (e) {
-      const msg = e?.message || "Failed to send reminders.";
+      const msg = e?.response?.data?.message || e?.message || "Failed to send reminders.";
       if (/401|unauthorized/i.test(msg)) { nav("/login", { replace: true }); return; }
       toast.error(msg);
     }
@@ -203,7 +213,7 @@ export default function MatchDetail() {
       toast.success("Match deleted.");
       nav("/matches", { replace: true });
     } catch (e) {
-      const msg = e?.message || "Failed to delete match.";
+      const msg = e?.response?.data?.message || e?.message || "Failed to delete match.";
       if (/401|unauthorized/i.test(msg)) { nav("/login", { replace: true }); return; }
       toast.error(msg);
     }
@@ -219,9 +229,10 @@ export default function MatchDetail() {
     );
   }
 
-  // FIX: always send full payload — non-creators were sending undefined before
   async function handleSave() {
+    if (saving) return; // prevent double-submit
     try {
+      setSaving(true);
       const payload = {
         players: formPlayers.map((p) => ({
           user: p.user ? idOf(p.user) : null,
@@ -236,30 +247,23 @@ export default function MatchDetail() {
       };
 
       const res = await api.put(`/sessions/${id}`, payload);
-      const updated = res.data?.data || res.data;
+
+      const updated = extractMatch(res.data);
+
+      if (!updated) {
+        throw new Error("Unexpected response from server. Please refresh and try again.");
+      }
 
       setMatch(updated);
-      // Re-sync form from fresh server data so confirmed states are accurate
-      setFormPlayers(
-        (updated?.players || []).map((p) => ({
-          user: p.user
-            ? { _id: idOf(p.user), firstName: p.user.firstName, lastName: p.user.lastName, email: p.user.email }
-            : null,
-          name: p.name || "",
-          email: p.email || "",
-          score: typeof p.score === "number" ? p.score : "",
-          result: p.result || "",
-          confirmed: !!p.confirmed,
-        }))
-      );
-      setFormNotes(updated?.notes || "");
-      setFormDate(toDateInputValue(updated?.date));
+      syncFormFromMatch(updated);
       setEditing(false);
       toast.success("Match updated.");
     } catch (e) {
-      const msg = e?.message || "Failed to update match.";
+      const msg = e?.response?.data?.message || e?.message || "Failed to update match.";
       if (/401|unauthorized/i.test(msg)) { nav("/login", { replace: true }); return; }
       toast.error(msg);
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -457,7 +461,6 @@ export default function MatchDetail() {
                   <tbody>
                     {formPlayers.map((p, idx) => {
                       const isGuest = !p.user;
-                      // FIX: guests can only be edited by creator/admin, all registered rows editable by any player
                       const disableGuestForNonCreator = isGuest && !amCreator && user?.role !== "admin";
                       const rowEditable = canEdit && !disableGuestForNonCreator;
 
@@ -521,26 +524,14 @@ export default function MatchDetail() {
               </div>
 
               <div className="flex gap-2">
-                <Button className="btn-sm" onClick={handleSave}>
-                  Save changes
+                <Button className="btn-sm" onClick={handleSave} disabled={saving}>
+                  {saving ? "Saving…" : "Save changes"}
                 </Button>
                 <button
                   className="btn btn-sm"
+                  disabled={saving}
                   onClick={() => {
-                    setFormPlayers(
-                      (match?.players || []).map((p) => ({
-                        user: p.user
-                          ? { _id: idOf(p.user), firstName: p.user.firstName, lastName: p.user.lastName, email: p.user.email }
-                          : null,
-                        name: p.name || "",
-                        email: p.email || "",
-                        score: typeof p.score === "number" ? p.score : "",
-                        result: p.result || "",
-                        confirmed: !!p.confirmed,
-                      }))
-                    );
-                    setFormNotes(match?.notes || "");
-                    setFormDate(toDateInputValue(match?.date));
+                    syncFormFromMatch(match);
                     setEditing(false);
                   }}
                 >
