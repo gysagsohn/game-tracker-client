@@ -92,7 +92,10 @@ const ActivityLog = memo(
   },
   // Only re-render if session ID changes (entire session data changed)
   (prevProps, nextProps) => {
-    return prevProps.session?._id === nextProps.session?._id;
+    return (
+      prevProps.session?._id === nextProps.session?._id &&
+      prevProps.session?.updatedAt === nextProps.session?.updatedAt
+    );
   }
 );
 
