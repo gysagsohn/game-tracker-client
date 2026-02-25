@@ -1,4 +1,3 @@
-// src/components/DateInput.jsx
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
@@ -16,6 +15,7 @@ function toStartOfDay(d) {
  * - label?: string
  * - required?: boolean
  * - className?: string
+ * - maxDate?: Date  (defaults to today — future dates always disabled)
  */
 export default function DateInput({
   label = "Date",
@@ -23,10 +23,17 @@ export default function DateInput({
   onChange,
   required,
   className = "",
+  maxDate,
 }) {
   const [open, setOpen] = useState(false);
   const inputId = useId();
   const wrapRef = useRef(null);
+
+  // Default maxDate to today (start of day)
+  const disabledAfter = useMemo(
+    () => toStartOfDay(maxDate || new Date()),
+    [maxDate]
+  );
 
   const selected = useMemo(() => {
     if (!value) return toStartOfDay(new Date());
@@ -34,7 +41,7 @@ export default function DateInput({
     return toStartOfDay(d);
   }, [value]);
 
-  // default to today
+  // Default to today
   useEffect(() => {
     if (!value && onChange) onChange(toStartOfDay(new Date()));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -58,6 +65,15 @@ export default function DateInput({
     };
   }, [open]);
 
+  function handleSelect(d) {
+    if (!d) return;
+    const picked = toStartOfDay(d);
+    // Guard: reject future dates even if somehow selected
+    if (picked > disabledAfter) return;
+    onChange?.(picked);
+    setOpen(false);
+  }
+
   return (
     <div className="relative" ref={wrapRef}>
       <label htmlFor={inputId} className="block text-sm font-medium mb-1">
@@ -65,7 +81,6 @@ export default function DateInput({
         {required ? <span className="text-[var(--color-warning)]"> *</span> : null}
       </label>
 
-      {/* Inline button so the “box” hugs the date text */}
       <button
         id={inputId}
         type="button"
@@ -87,13 +102,13 @@ export default function DateInput({
           <DayPicker
             mode="single"
             selected={selected}
-            onSelect={(d) => {
-              if (!d) return;
-              onChange?.(toStartOfDay(d));
-              setOpen(false);
-            }}
+            onSelect={handleSelect}
+            disabled={{ after: disabledAfter }}
+            defaultMonth={selected}
             weekStartsOn={1}
             captionLayout="dropdown-buttons"
+            fromYear={2000}
+            toYear={new Date().getFullYear()}
             className="rdp-compact"
           />
         </div>

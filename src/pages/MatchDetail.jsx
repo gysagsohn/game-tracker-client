@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import ActivityLog from "../components/matches/ActivityLog";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
+import DateInput from "../components/DateInput.jsx";
 import { useAuth } from "../contexts/useAuth";
 import { useToast } from "../contexts/useToast";
 import api from "../lib/axios";
@@ -16,46 +17,29 @@ function idOf(v) {
 
 function fmtDate(d) {
   if (!d) return "";
-  try {
-    return new Date(d).toLocaleDateString();
-  } catch {
-    return "";
-  }
-}
-
-function toDateInputValue(d) {
-  if (!d) return "";
-  const dt = new Date(d);
-  const yyyy = dt.getFullYear();
-  const mm = String(dt.getMonth() + 1).padStart(2, "0");
-  const dd = String(dt.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
+  try { return new Date(d).toLocaleDateString(); }
+  catch { return ""; }
 }
 
 function badgeStyles(result) {
-  if (result === "Win") {
-    return {
-      borderColor: "color-mix(in oklab, var(--color-success) 45%, transparent)",
-      background: "color-mix(in oklab, var(--color-success) 14%, white)",
-    };
-  }
-  if (result === "Loss") {
-    return {
-      borderColor: "color-mix(in oklab, var(--color-warning) 45%, transparent)",
-      background: "color-mix(in oklab, var(--color-warning) 12%, white)",
-    };
-  }
-  if (result === "Draw") {
-    return {
-      borderColor: "color-mix(in oklab, var(--color-border-muted) 60%, transparent)",
-      background: "color-mix(in oklab, var(--color-border-muted) 22%, white)",
-    };
-  }
+  if (result === "Win") return {
+    borderColor: "color-mix(in oklab, var(--color-success) 45%, transparent)",
+    background: "color-mix(in oklab, var(--color-success) 14%, white)",
+  };
+  if (result === "Loss") return {
+    borderColor: "color-mix(in oklab, var(--color-warning) 45%, transparent)",
+    background: "color-mix(in oklab, var(--color-warning) 12%, white)",
+  };
+  if (result === "Draw") return {
+    borderColor: "color-mix(in oklab, var(--color-border-muted) 60%, transparent)",
+    background: "color-mix(in oklab, var(--color-border-muted) 22%, white)",
+  };
   return {
     borderColor: "color-mix(in oklab, var(--color-border-muted) 60%, transparent)",
     background: "color-mix(in oklab, var(--color-border-muted) 12%, white)",
   };
 }
+
 function extractMatch(responseData) {
   if (!responseData) return null;
   if (responseData.data && responseData.data._id) return responseData.data;
@@ -77,10 +61,10 @@ export default function MatchDetail() {
 
   // edit state
   const [editing, setEditing] = useState(false);
-  const [saving, setSaving] = useState(false); 
+  const [saving, setSaving] = useState(false);
   const [formPlayers, setFormPlayers] = useState([]);
   const [formNotes, setFormNotes] = useState("");
-  const [formDate, setFormDate] = useState("");
+  const [formDate, setFormDate] = useState(new Date()); // Date object
 
   const amCreator = useMemo(() => {
     const c = match?.createdBy;
@@ -123,7 +107,7 @@ export default function MatchDetail() {
       }))
     );
     setFormNotes(payload?.notes || "");
-    setFormDate(toDateInputValue(payload?.date));
+    setFormDate(payload?.date ? new Date(payload.date) : new Date());
   }
 
   // Load
@@ -230,7 +214,7 @@ export default function MatchDetail() {
   }
 
   async function handleSave() {
-    if (saving) return; // prevent double-submit
+    if (saving) return;
     try {
       setSaving(true);
       const payload = {
@@ -240,14 +224,12 @@ export default function MatchDetail() {
           email: p.email || "",
           score: p.score === "" ? undefined : Number(p.score),
           result: p.result || "",
-          // confirmed is server-managed, intentionally omitted
         })),
         notes: formNotes,
-        date: formDate ? new Date(formDate).toISOString() : undefined,
+        date: formDate instanceof Date ? formDate.toISOString() : undefined,
       };
 
       const res = await api.put(`/sessions/${id}`, payload);
-
       const updated = extractMatch(res.data);
 
       if (!updated) {
@@ -385,11 +367,9 @@ export default function MatchDetail() {
                       )}
                       {typeof p.score === "number" && <span>Score: {p.score}</span>}
                       {p.user ? (
-                        p.confirmed ? (
-                          <span aria-label="Confirmed" title="Confirmed">✓</span>
-                        ) : (
-                          <span aria-label="Pending" title="Pending">○</span>
-                        )
+                        p.confirmed
+                          ? <span aria-label="Confirmed" title="Confirmed">✓</span>
+                          : <span aria-label="Pending" title="Pending">○</span>
                       ) : (
                         <span className="text-secondary" title="Guest">Guest</span>
                       )}
@@ -405,23 +385,15 @@ export default function MatchDetail() {
               <div className="mt-4 flex flex-wrap gap-2">
                 {canConfirm && (
                   <>
-                    <Button className="btn-sm" onClick={handleConfirm}>
-                      Confirm I'm in
-                    </Button>
-                    <Button className="btn-sm btn-warning" onClick={handleDecline}>
-                      Decline Match
-                    </Button>
+                    <Button className="btn-sm" onClick={handleConfirm}>Confirm I'm in</Button>
+                    <Button className="btn-sm btn-warning" onClick={handleDecline}>Decline Match</Button>
                   </>
                 )}
                 {canRemind && (
-                  <Button className="btn-sm" onClick={handleRemind}>
-                    Remind players
-                  </Button>
+                  <Button className="btn-sm" onClick={handleRemind}>Remind players</Button>
                 )}
                 {canEdit && (
-                  <Button className="btn-sm" onClick={() => setEditing(true)}>
-                    Edit match
-                  </Button>
+                  <Button className="btn-sm" onClick={() => setEditing(true)}>Edit match</Button>
                 )}
                 {amCreator && (
                   <button className="btn btn-warning btn-sm" onClick={handleDelete}>
@@ -435,15 +407,13 @@ export default function MatchDetail() {
           {/* edit mode */}
           {editing && (
             <div className="space-y-4">
-              {/* Date only editable by creator */}
+              {/* Date — only editable by creator, uses DateInput with future-date guard */}
               {amCreator && (
                 <div className="max-w-xs">
-                  <label className="mb-1 block text-sm text-secondary">Match date</label>
-                  <input
-                    type="date"
-                    className="input"
+                  <DateInput
+                    label="Match date"
                     value={formDate}
-                    onChange={(e) => setFormDate(e.target.value)}
+                    onChange={setFormDate}
                   />
                 </div>
               )}
@@ -463,7 +433,6 @@ export default function MatchDetail() {
                       const isGuest = !p.user;
                       const disableGuestForNonCreator = isGuest && !amCreator && user?.role !== "admin";
                       const rowEditable = canEdit && !disableGuestForNonCreator;
-
                       return (
                         <tr key={idx} className="border-t" style={{ borderColor: "var(--color-border-muted)" }}>
                           <td className="py-2 pr-2">
