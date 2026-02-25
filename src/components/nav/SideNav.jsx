@@ -39,8 +39,7 @@ export default function SideNav() {
 
   return (
     <aside 
-      className="hidden md:flex h-[90vh] min-w-64 flex-col justify-between pt-8 px-4 rounded-2xl shadow-card"
-      style={{
+        className="hidden md:flex h-[90vh] w-[22%] min-w-[200px] max-w-[280px] flex-col justify-between pt-8 px-4 rounded-2xl shadow-card"      style={{
         background: "var(--color-card)",
         border: "1px solid color-mix(in oklab, var(--color-border-muted) 40%, transparent)"
       }}

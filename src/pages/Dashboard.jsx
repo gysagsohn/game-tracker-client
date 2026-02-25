@@ -67,7 +67,7 @@ export default function Dashboard() {
   const lastMatch = useMemo(() => matches?.[0] || null, [matches]);
 
   return (
-    <main className="py-2 lg:py-6">
+    <main className="py-2 lg:py-6 px-4">
       {/* Heading */}
       <h1 className="h1 text-center mb-6 lg:mb-10">
         Welcome back{user?.firstName ? `, ${user.firstName}` : ""}
@@ -87,8 +87,7 @@ export default function Dashboard() {
       )}
 
       {/* Main cards */}
-      <section className="grid gap-6 lg:gap-10 md:grid-cols-2 mb-8 lg:mb-12">
-        {/* Last Match Card or Empty State */}
+      <section className="grid gap-6 lg:gap-10 md:grid-cols-2 mb-8 lg:mb-12 max-w-2xl md:max-w-none mx-auto">      
         {loading ? (
           <Card className="p-6">
             <div className="animate-pulse space-y-4">
