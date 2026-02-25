@@ -348,6 +348,8 @@ Open source and available for educational purposes.
 - Edit match — any player in the match can edit details
 - ActivityLog updates correctly after match edits
 - Matches list re-fetches on navigation back from match detail
+- Responsive NewMatch page — card layout for players on mobile, stacked inputs, toast appears at top of screen on mobile
+- Mid-range screen sizing — side margins added at tablet sizes to prevent stretched layouts
 
 ### Version 1.2 - UX & Performance (January 2026)
 - Skeleton loading states across all pages
