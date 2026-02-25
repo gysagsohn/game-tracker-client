@@ -11,7 +11,7 @@ import { useAuth } from "../contexts/useAuth";
 import { useToast } from "../contexts/useToast";
 import { validateMatch } from "../utils/validators";
 import api from "../lib/axios";
-import { FaExclamationCircle } from 'react-icons/fa';
+import { FaExclamationCircle } from "react-icons/fa";
 
 const RESULT_OPTIONS = ["Win", "Loss", "Draw"];
 
@@ -22,22 +22,179 @@ function idOf(v) {
   return null;
 }
 
+// Compact mobile player card 
+function PlayerCard({ p, idx, onChangePlayer, removePlayer }) {
+  const isMe = p.kind === "self";
+  return (
+    <div className="border border-[--color-border-muted] rounded-[var(--radius-standard)] p-3 grid gap-2">
+      {/* Row 1: name + type badge */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          {p.kind === "guest" ? (
+            <input
+              className="input text-sm"
+              value={p.name}
+              onChange={(e) => onChangePlayer(idx, "name", e.target.value)}
+              placeholder="Guest name"
+            />
+          ) : (
+            <span className="font-medium text-sm truncate">{p.name}</span>
+          )}
+        </div>
+        <span className="text-xs text-secondary shrink-0">
+          {p.kind === "self" ? "You" : p.kind === "user" ? "User" : "Guest"}
+        </span>
+      </div>
+
+      {/* Row 2: score + result */}
+      <div className="flex gap-2">
+        <input
+          className="input text-sm flex-1"
+          type="number"
+          value={p.score}
+          onChange={(e) => onChangePlayer(idx, "score", e.target.value)}
+          placeholder="Score"
+        />
+        <select
+          className="input text-sm flex-1"
+          value={p.result || ""}
+          onChange={(e) => onChangePlayer(idx, "result", e.target.value)}
+        >
+          <option value="">— Result</option>
+          {RESULT_OPTIONS.map((r) => (
+            <option key={r} value={r}>{r}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Guest email + invite checkbox */}
+      {p.kind === "guest" && (
+        <div className="grid gap-1">
+          <input
+            className="input text-sm"
+            value={p.email}
+            onChange={(e) => onChangePlayer(idx, "email", e.target.value)}
+            placeholder="guest@example.com"
+          />
+          <label className="text-xs flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={!!p.invited}
+              onChange={(e) => onChangePlayer(idx, "invited", e.target.checked)}
+            />
+            Send invite email
+          </label>
+        </div>
+      )}
+
+      {/* Remove */}
+      {!isMe && (
+        <button
+          type="button"
+          className="btn btn-sm self-start"
+          onClick={() => removePlayer(idx)}
+        >
+          Remove
+        </button>
+      )}
+    </div>
+  );
+}
+
+// Desktop table row 
+function PlayerTableRow({ p, idx, onChangePlayer, removePlayer }) {
+  return (
+    <tr className="border-t" style={{ borderColor: "var(--color-border-muted)" }}>
+      <td className="py-2 pr-2">
+        {p.kind === "guest" ? (
+          <Input
+            value={p.name}
+            onChange={(e) => onChangePlayer(idx, "name", e.target.value)}
+            placeholder="Guest name"
+          />
+        ) : (
+          <div className="font-medium">{p.name}</div>
+        )}
+      </td>
+      <td className="py-2 pr-2">
+        <span className="text-xs text-secondary">
+          {p.kind === "self" ? "You" : p.kind === "user" ? "User" : "Guest"}
+        </span>
+      </td>
+      <td className="py-2 pr-2">
+        {p.kind === "guest" ? (
+          <div className="grid gap-1">
+            <Input
+              value={p.email}
+              onChange={(e) => onChangePlayer(idx, "email", e.target.value)}
+              placeholder="guest@example.com"
+            />
+            <label className="mt-1 block text-xs">
+              <input
+                type="checkbox"
+                className="mr-2"
+                checked={!!p.invited}
+                onChange={(e) => onChangePlayer(idx, "invited", e.target.checked)}
+              />
+              Send invite email
+            </label>
+          </div>
+        ) : (
+          <span className="text-xs text-secondary">{p.email || "—"}</span>
+        )}
+      </td>
+      <td className="py-2 pr-2">
+        <input
+          className="input"
+          type="number"
+          value={p.score}
+          onChange={(e) => onChangePlayer(idx, "score", e.target.value)}
+          placeholder="—"
+        />
+      </td>
+      <td className="py-2 pr-2">
+        <select
+          className="input"
+          value={p.result || ""}
+          onChange={(e) => onChangePlayer(idx, "result", e.target.value)}
+        >
+          <option value="">—</option>
+          {RESULT_OPTIONS.map((r) => (
+            <option key={r} value={r}>{r}</option>
+          ))}
+        </select>
+      </td>
+      <td className="py-2 pr-2">
+        {p.kind === "self" ? (
+          <span className="text-xs text-secondary">You</span>
+        ) : (
+          <button
+            type="button"
+            className="btn btn-sm"
+            onClick={() => removePlayer(idx)}
+          >
+            Remove
+          </button>
+        )}
+      </td>
+    </tr>
+  );
+}
+
+// Page
 export default function NewMatchPage() {
   const { user } = useAuth();
   const toast = useToast();
   const nav = useNavigate();
   const location = useLocation();
 
-  // Game & date
   const [game, setGame] = useState(null);
   const [date, setDate] = useState(() => new Date());
   const [notes, setNotes] = useState("");
 
-  // Friends
   const [friends, setFriends] = useState([]);
   const [friendsLoading, setFriendsLoading] = useState(false);
 
-  // Players (seed with you)
   const displayName =
     `${user?.firstName || ""} ${user?.lastName || ""}`.trim() ||
     user?.email ||
@@ -61,19 +218,12 @@ export default function NewMatchPage() {
     },
   ]);
 
-  // "Add friend" UI
   const [friendIdToAdd, setFriendIdToAdd] = useState("");
-
-  // "Add guest" UI
   const [guest, setGuest] = useState({ name: "", email: "", invited: false });
-
   const [saving, setSaving] = useState(false);
-  
-  // Validation errors object
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
 
-  // Load friend list
   useEffect(() => {
     let ignore = false;
     async function loadFriends() {
@@ -90,9 +240,7 @@ export default function NewMatchPage() {
       }
     }
     loadFriends();
-    return () => {
-      ignore = true;
-    };
+    return () => { ignore = true; };
   }, [user?._id]);
 
   useEffect(() => {
@@ -115,9 +263,7 @@ export default function NewMatchPage() {
               ...r,
               [field]:
                 field === "score"
-                  ? val === ""
-                    ? ""
-                    : Number(val)
+                  ? val === "" ? "" : Number(val)
                   : field === "invited"
                   ? !!val
                   : val,
@@ -125,10 +271,8 @@ export default function NewMatchPage() {
           : r
       )
     );
-    
-    // Clear validation errors when user makes changes
     if (errors.players || errors.results) {
-      setErrors(prev => {
+      setErrors((prev) => {
         const next = { ...prev };
         delete next.players;
         delete next.results;
@@ -175,14 +319,8 @@ export default function NewMatchPage() {
   function addGuest() {
     const n = guest.name.trim();
     const e = guest.email.trim();
-    if (!n) {
-      toast.error("Guest name is required.");
-      return;
-    }
-    if (guest.invited && !e) {
-      toast.error("Enter an email to send an invite.");
-      return;
-    }
+    if (!n) { toast.error("Guest name is required."); return; }
+    if (guest.invited && !e) { toast.error("Enter an email to send an invite."); return; }
     setPlayers((rows) => [
       ...rows,
       {
@@ -199,24 +337,17 @@ export default function NewMatchPage() {
     setGuest({ name: "", email: "", invited: false });
   }
 
-  async function onSubmit(e) {
-    e.preventDefault();
-    
-    // Mark fields as touched
+  async function onSubmit(ev) {
+    ev.preventDefault();
     setTouched({ game: true, players: true });
-    
-    // Validate form
     const validation = validateMatch({ game, players });
     setErrors(validation.errors);
-    
     if (!validation.ok) {
       toast.error("Please fix the errors before submitting.");
       return;
     }
-
     try {
       setSaving(true);
-
       const payload = {
         game: game._id,
         date: formatISO(date || new Date()),
@@ -230,20 +361,16 @@ export default function NewMatchPage() {
           invited: p.kind === "guest" ? !!p.invited : false,
         })),
       };
-
       const res = await api.post("/sessions", payload);
       const created = res?.data?.data || res?.data;
-
       toast.success("Match created!");
-
       if (created?._id) {
         nav(`/matches/${created._id}`, { replace: true });
       } else {
         nav("/matches", { replace: true });
       }
     } catch (e) {
-      const msg = e?.message || "Failed to create match.";
-      toast.error(msg);
+      toast.error(e?.message || "Failed to create match.");
     } finally {
       setSaving(false);
     }
@@ -252,11 +379,11 @@ export default function NewMatchPage() {
   const disableSave = saving || !game?._id || players.length < 1;
 
   return (
-    <main className="py-2 lg:py-6">
+    <main className="py-2 lg:py-6 px-4 md:px-6">
       <h1 className="h1 text-center mb-6 lg:mb-10">Log a New Match</h1>
 
-      <Card className="p-6 max-w-3xl mx-auto">
-        {/* Show validation errors at top */}
+      <Card className="p-4 md:p-6 max-w-3xl mx-auto">
+        {/* Validation error summary */}
         {Object.keys(errors).length > 0 && touched.game && (
           <Alert variant="error" className="mb-4">
             <div className="space-y-1">
@@ -283,24 +410,19 @@ export default function NewMatchPage() {
         )}
 
         <form onSubmit={onSubmit} className="grid gap-5">
-          {/* Game + helper link */}
-          <div>
+
+          {/* ── Game select ── */}
+          <div className="w-full">
             <GameSelect
               value={game}
               onChange={(newGame) => {
                 setGame(newGame);
-                // Clear game error when game is selected
                 if (errors.game) {
-                  setErrors(prev => {
-                    const next = { ...prev };
-                    delete next.game;
-                    return next;
-                  });
+                  setErrors((prev) => { const n = { ...prev }; delete n.game; return n; });
                 }
               }}
               allowCreate={true}
             />
-            {/* Show inline error for game field */}
             {touched.game && errors.game && (
               <div className="mt-1 flex items-center gap-1 text-sm text-[var(--color-warning)]">
                 <FaExclamationCircle size={14} />
@@ -318,22 +440,35 @@ export default function NewMatchPage() {
             </div>
           </div>
 
-          {/* Date */}
-          <div className="max-w-xs">
+          {/* ── Date ── */}
+          <div className="w-full max-w-xs">
             <DateInput label="Date" value={date} onChange={setDate} required />
           </div>
 
-          {/* Players table */}
+          {/* ── Players ── */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-sm font-semibold">Players</h3>
-              {/* Show player count hint */}
               <span className="text-xs text-secondary">
-                {players.length} player{players.length !== 1 ? 's' : ''} added
+                {players.length} player{players.length !== 1 ? "s" : ""} added
               </span>
             </div>
 
-            <div className="overflow-x-auto">
+            {/* Mobile: card-per-player (hidden at md+) */}
+            <div className="grid gap-2 md:hidden">
+              {players.map((p, idx) => (
+                <PlayerCard
+                  key={idx}
+                  p={p}
+                  idx={idx}
+                  onChangePlayer={onChangePlayer}
+                  removePlayer={removePlayer}
+                />
+              ))}
+            </div>
+
+            {/* Desktop: table (hidden below md) */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="text-left text-secondary">
                   <tr>
@@ -347,119 +482,24 @@ export default function NewMatchPage() {
                 </thead>
                 <tbody>
                   {players.map((p, idx) => (
-                    <tr
+                    <PlayerTableRow
                       key={idx}
-                      className="border-t"
-                      style={{ borderColor: "var(--color-border-muted)" }}
-                    >
-                      <td className="py-2 pr-2">
-                        {p.kind === "guest" ? (
-                          <Input
-                            value={p.name}
-                            onChange={(e) =>
-                              onChangePlayer(idx, "name", e.target.value)
-                            }
-                            placeholder="Guest name"
-                          />
-                        ) : (
-                          <div className="font-medium">{p.name}</div>
-                        )}
-                      </td>
-                      <td className="py-2 pr-2">
-                        <span className="text-xs text-secondary">
-                          {p.kind === "self"
-                            ? "You"
-                            : p.kind === "user"
-                            ? "User"
-                            : "Guest"}
-                        </span>
-                      </td>
-                      <td className="py-2 pr-2">
-                        {p.kind === "guest" ? (
-                          <Input
-                            value={p.email}
-                            onChange={(e) =>
-                              onChangePlayer(idx, "email", e.target.value)
-                            }
-                            placeholder="guest@example.com"
-                          />
-                        ) : (
-                          <span className="text-xs text-secondary">
-                            {p.email || "—"}
-                          </span>
-                        )}
-                        {p.kind === "guest" && (
-                          <label className="mt-1 block text-xs">
-                            <input
-                              type="checkbox"
-                              className="mr-2"
-                              checked={!!p.invited}
-                              onChange={(e) =>
-                                onChangePlayer(
-                                  idx,
-                                  "invited",
-                                  e.target.checked
-                                )
-                              }
-                            />
-                            Send invite email
-                          </label>
-                        )}
-                      </td>
-                      <td className="py-2 pr-2">
-                        <input
-                          className="input"
-                          type="number"
-                          value={p.score}
-                          onChange={(e) =>
-                            onChangePlayer(idx, "score", e.target.value)
-                          }
-                          placeholder="—"
-                        />
-                      </td>
-                      <td className="py-2 pr-2">
-                        <select
-                          className="input"
-                          value={p.result || ""}
-                          onChange={(e) =>
-                            onChangePlayer(idx, "result", e.target.value)
-                          }
-                        >
-                          <option value="">—</option>
-                          {RESULT_OPTIONS.map((r) => (
-                            <option key={r} value={r}>
-                              {r}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="py-2 pr-2">
-                        {p.kind === "self" ? (
-                          <span className="text-xs text-secondary">You</span>
-                        ) : (
-                          <button
-                            type="button"
-                            className="btn btn-sm"
-                            onClick={() => removePlayer(idx)}
-                          >
-                            Remove
-                          </button>
-                        )}
-                      </td>
-                    </tr>
+                      p={p}
+                      idx={idx}
+                      onChangePlayer={onChangePlayer}
+                      removePlayer={removePlayer}
+                    />
                   ))}
                 </tbody>
               </table>
             </div>
 
-            {/* Add friend */}
-            <div className="mt-3 grid gap-2 sm:flex sm:items-end">
-              <div className="sm:w-80">
-                <label className="mb-1 block text-sm text-secondary">
-                  Add friend
-                </label>
+            {/* ── Add friend ── */}
+            <div className="mt-4 grid gap-2 md:flex md:items-end">
+              <div className="w-full md:w-80">
+                <label className="mb-1 block text-sm text-secondary">Add friend</label>
                 <select
-                  className="input"
+                  className="input w-full"
                   value={friendIdToAdd}
                   onChange={(e) => setFriendIdToAdd(e.target.value)}
                   disabled={friendsLoading || friendOptions.length === 0}
@@ -469,15 +509,14 @@ export default function NewMatchPage() {
                   </option>
                   {friendOptions.map((f) => (
                     <option key={String(idOf(f))} value={String(idOf(f))}>
-                      {`${f.firstName || ""} ${f.lastName || ""}`.trim() ||
-                        f.email}
+                      {`${f.firstName || ""} ${f.lastName || ""}`.trim() || f.email}
                     </option>
                   ))}
                 </select>
               </div>
               <Button
                 type="button"
-                className="btn-sm"
+                className="btn-sm w-full md:w-auto"
                 onClick={addFriend}
                 disabled={!friendIdToAdd}
               >
@@ -485,17 +524,13 @@ export default function NewMatchPage() {
               </Button>
             </div>
 
-            {/* Add guest */}
-            <div className="mt-4 grid gap-2 sm:grid-cols-3">
+            {/* ── Add guest ── */}
+            <div className="mt-4 grid gap-2 md:grid-cols-[1fr_1fr_auto] md:items-end">
               <div>
-                <label className="mb-1 block text-sm text-secondary">
-                  Guest name
-                </label>
+                <label className="mb-1 block text-sm text-secondary">Guest name</label>
                 <Input
                   value={guest.name}
-                  onChange={(e) =>
-                    setGuest((g) => ({ ...g, name: e.target.value }))
-                  }
+                  onChange={(e) => setGuest((g) => ({ ...g, name: e.target.value }))}
                   placeholder="Guest name"
                 />
               </div>
@@ -505,9 +540,7 @@ export default function NewMatchPage() {
                 </label>
                 <Input
                   value={guest.email}
-                  onChange={(e) =>
-                    setGuest((g) => ({ ...g, email: e.target.value }))
-                  }
+                  onChange={(e) => setGuest((g) => ({ ...g, email: e.target.value }))}
                   placeholder="guest@example.com"
                 />
                 <label className="mt-1 block text-xs">
@@ -522,21 +555,23 @@ export default function NewMatchPage() {
                   Send invite email
                 </label>
               </div>
-              <div className="flex items-end">
-                <Button type="button" className="btn-sm" onClick={addGuest}>
+              <div className="md:pb-0">
+                <Button
+                  type="button"
+                  className="btn-sm w-full md:w-auto"
+                  onClick={addGuest}
+                >
                   Add guest
                 </Button>
               </div>
             </div>
           </div>
 
-          {/* Notes */}
-          <div>
-            <label className="mb-1 block text-sm text-secondary">
-              Notes (optional)
-            </label>
+          {/* ── Notes ── */}
+          <div className="w-full">
+            <label className="mb-1 block text-sm text-secondary">Notes (optional)</label>
             <textarea
-              className="input"
+              className="input w-full"
               rows={3}
               placeholder="Anything to remember about this match…"
               value={notes}
@@ -544,24 +579,25 @@ export default function NewMatchPage() {
             />
           </div>
 
-          {/* Actions */}
-          <div className="flex gap-3">
+          {/* ── Actions ── */}
+          <div className="grid gap-2 md:flex md:gap-3">
             <Button
               type="submit"
               loading={saving}
               disabled={disableSave}
-              className="w-full"
+              className="w-full md:w-auto"
             >
               Save Match
             </Button>
             <button
               type="button"
-              className="btn w-full"
+              className="btn w-full md:w-auto"
               onClick={() => nav("/matches")}
             >
               Cancel
             </button>
           </div>
+
         </form>
       </Card>
     </main>

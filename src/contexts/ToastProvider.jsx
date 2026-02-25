@@ -90,7 +90,8 @@ export default function ToastProvider({ children }) {
   );
 }
 
-/** Renders the toast stack */
+
+// Renders the toast stack 
 function ToastViewport({ toasts, dismiss }) {
   return (
     <div
@@ -98,8 +99,8 @@ function ToastViewport({ toasts, dismiss }) {
       aria-atomic="false"
       className="
         pointer-events-none fixed z-[9999]
-        inset-x-0 bottom-20 flex flex-col items-center gap-2 px-4
-        md:inset-auto md:right-6 md:bottom-6 md:top-auto md:items-end md:px-0
+        inset-x-0 top-4 flex flex-col items-center gap-2 px-4
+        md:inset-auto md:right-6 md:top-6 md:bottom-auto md:items-end md:px-0
       "
     >
       {toasts.map((t) => (
