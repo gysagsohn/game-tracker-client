@@ -1,8 +1,8 @@
 <p align="center">
-  <a href="https://github.com/gysagsohn/game-tracker-client">
-    <img src="https://img.shields.io/github/stars/gysagsohn/game-tracker-client?style=social" alt="GitHub stars">
+  <a href="https://github.com/gysagsohn/keeptrack.online-client">
+    <img src="https://img.shields.io/github/stars/gysagsohn/keeptrack.online-client?style=social" alt="GitHub stars">
   </a>
-  <a href="https://gy-gametracker.netlify.app">
+  <a href="https://keeptrack.online">
     <img src="https://img.shields.io/netlify/54a5c9e5-9595-48c7-a422-221e8a15bc1d?label=Netlify%20Deploy&logo=netlify" alt="Netlify frontend">
   </a>
   <a href="https://game-tracker-server-zq2k.onrender.com">
@@ -11,12 +11,12 @@
   <img src="https://img.shields.io/badge/status-Live-brightgreen" alt="App status">
 </p>
 
-# Game Tracker Frontend
+# Keep Track – Frontend
 
-React + Vite frontend for Game Tracker, a full-stack MERN application for tracking board and card game results with friends.
+React + Vite frontend for Keep Track, a full-stack MERN application for tracking board and card game results with friends.
 
-**Live Application:** [https://gy-gametracker.netlify.app](https://gy-gametracker.netlify.app)  
-**Backend Repository:** [game-tracker-server](https://github.com/gysagsohn/game-tracker-server)
+**Live Application:** [https://keeptrack.online](https://keeptrack.online)
+**Backend Repository:** [keeptrack.online-server](https://github.com/gysagsohn/keeptrack.online-server)
 
 ---
 
@@ -48,7 +48,7 @@ React + Vite frontend for Game Tracker, a full-stack MERN application for tracki
 
 ## Project Structure
 ```
-game-tracker-client/
+keeptrack-client/
 ├── public/
 │   ├── _redirects              # Netlify SPA routing config
 │   ├── 404.html                # Custom 404 page
@@ -81,7 +81,8 @@ game-tracker-client/
 │   │   │   ├── LastGameCard.jsx
 │   │   │   └── StatsCard.jsx
 │   │   ├── matches/
-│   │   │   └── ActivityLog.jsx
+│   │   │   ├── ActivityLog.jsx
+│   │   │   └── MatchCard.jsx
 │   │   ├── AuthedShell.jsx     # Layout wrapper for authenticated routes
 │   │   ├── ProtectedRoute.jsx  # Route protection HOC
 │   │   ├── ErrorBoundary.jsx   # Error handling
@@ -146,89 +147,61 @@ game-tracker-client/
 - Google OAuth integration via Passport.js
 - Email verification required before login
 - Secure password reset with auto-login
-  - Single-use tokens with 15-minute expiry
-  - Automatic login after successful password reset
-  - Seamless UX without extra login step
 - Session persistence with localStorage
 - Protected routes with automatic redirect on 401
-- Automatic token refresh on API errors
 - Client-side validation with inline error messages
 - Password strength indicator with real-time feedback
 - CapsLock warning on password fields
 - Show/hide password toggle
-- Remember me functionality (7-day tokens)
-
-### User Management
-- User profile with editable fields (firstName, lastName)
-- Profile statistics (total matches, wins, losses, draws, most played game)
-- Favorite opponent tracking with win rates
-- Account deletion with confirmation
-- Password change functionality
-- Activity logging for audit trails
 
 ### Match Tracking
 - Create matches with multiple players (friends or guests)
 - Guest player support with optional email invitations
-- Match confirmation workflow (requires all players to confirm)
-- Match editing (creator only)
+- Match confirmation workflow (all players must confirm)
+- Match editing (any player in the match)
 - Match deletion (creator only)
 - Decline match invitations with automatic player removal
 - Detailed match view with activity log
-- Score tracking per player
-- Result tracking (Win/Loss/Draw)
+- Score and result tracking (Win/Loss/Draw)
 - Match filtering by game and result
 - Match history with status indicators
-- Email reminders for unconfirmed matches (rate limited: 1 per 6 hours)
+- Email reminders for unconfirmed matches (rate limited)
 
 ### Friend System
-- Search for users by name or email (debounced, 2-char minimum, rate limited)
+- Search for users by name or email
 - Send friend requests via email
 - Accept/reject friend requests
-- View friends list
-- View sent requests
-- View suggested friends (friends-of-friends)
+- View friends list, sent requests, suggested friends
 - Unfriend functionality
-- Friend request notifications
 
 ### Notifications
-- In-app notification system with badge counts
+- In-app notification system with unread badge counts
 - Notification types: friend requests, match invites, match updates, confirmations, declines
-- Paginated notification list
-- Mark individual notifications as read
-- Mark all notifications as read
+- Mark individual or all notifications as read
 - Filter by read/unread status
-- Real-time unread count on navigation
-- Inline action buttons (accept/decline)
+- Inline accept/decline actions
 
 ### Games Library
 - Browse available games
 - Create custom games
-- Game search and selection dropdown with autocomplete
-- Quick "Add Game" option from match creation flow
+- Game search and selection with autocomplete
 - Game categories (Card, Board, Dice, Word, Strategy, Trivia, Party)
 
-### UI/UX Features
+### UI/UX
 - Mobile-first responsive design
-- Desktop sidebar navigation with logo and active states
-- Mobile bottom navigation bar
-- Skeleton loading states for improved perceived performance
-- Toast notifications for user feedback (success/error/info)
+- Desktop sidebar + mobile bottom navigation
+- Skeleton loading states
+- Toast notifications (success/error/info)
 - Error boundary for graceful error handling
-- Empty states with call-to-action buttons
-- Inline form validation with error messages
-- Loading spinners on async actions
-- Disabled buttons during API calls
+- Inline form validation
 - Custom 404 page
-- Rate limit error handling with user-friendly messages
 
 ---
 
 ## Design System
 
 ### Custom Tailwind Theme
-All colors and spacing follow a consistent design token system defined in `index.css`:
 
-**Colors:**
 ```css
 --color-default: #F5F6FA      /* Background */
 --color-card: #FFFFFF          /* Card backgrounds */
@@ -243,126 +216,26 @@ All colors and spacing follow a consistent design token system defined in `index
 --color-border-muted: #D1D5DB  /* Borders */
 ```
 
-**Typography Scale:**
-- Heading 1: 32px
-- Heading 2: 24px
-- Body: 16px
-- Small: 14px
-
-**Spacing:** 4px base scale (xs, s, m, l, xl)
-
-**Border Radius:** 8px standard
-
 **Component Classes:**
 - `.btn`, `.btn-primary`, `.btn-success`, `.btn-warning`, `.btn-sm`
 - `.input`, `.input-error`, `.input-success`
-- `.card`, `.shadow-card`, `.shadow-modal`
-- `.h1`, `.h2`, `.body-text`, `.text-small`
-
----
-
-## Architecture
-
-### State Management
-
-**AuthContext** (`src/contexts/AuthProvider.jsx`)
-- Manages user authentication state
-- Provides `token`, `user`, `loading` state
-- Provides `login()`, `signup()`, `logout()`, `setToken()`, `setUser()` functions
-- Automatically hydrates user from token on app load
-- Handles token expiry and automatic logout
-- Supports manual token/user updates (for password reset auto-login)
-
-**ToastContext** (`src/contexts/ToastProvider.jsx`)
-- Global toast notification system
-- Provides `toast.success()`, `toast.error()`, `toast.info()`, `toast.loading()`
-- Auto-dismisses after configurable duration (3 seconds default)
-- Supports manual dismissal
-- Limits to 6 simultaneous toasts
-- Position: bottom-right on desktop, bottom-center on mobile
-
-### API Client
-
-**Axios Configuration** (`src/lib/axios.js`)
-```javascript
-// Automatic token injection
-api.interceptors.request.use((config) => {
-  const token = tokenStorage.get();
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
-
-// Automatic 401 handling + rate limit errors
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      tokenStorage.remove();
-      window.location.href = "/login";
-    }
-    
-    // Rate limit errors (429) handled gracefully
-    if (error.response?.status === 429) {
-      const message = error.response?.data?.message || "Too many requests. Please try again later.";
-      // Toast shown by calling component
-    }
-    
-    return Promise.reject(new Error(error.response?.data?.message || error.message));
-  }
-);
-```
-
-### Routing
-
-**Protected Routes:**
-All routes under `/dashboard`, `/matches`, `/friends`, `/profile`, `/notifications` require authentication. Unauthenticated users are redirected to `/login`.
-
-**Public Routes:**
-- `/login` - Login page
-- `/signup` - Registration page
-- `/verify-email` - Email verification handler
-- `/forgot-password` - Password reset request
-- `/reset-password` - Password reset form (with auto-login)
-- `/check-email` - Email verification pending page
-- `/oauth-success` - OAuth callback handler
-
----
-
-## Security Features
-
-### Backend Integration
-Game Tracker frontend integrates with a production-ready backend with enterprise-grade security:
-
-**Security Features (Backend):**
-- OAuth redirect validation (phishing prevention)
-- Single-use password reset tokens with auto-login
-- Email verification race condition prevention
-- Comprehensive rate limiting (5 different limiters)
-- Input sanitization (XSS/NoSQL injection prevention)
-
-**Frontend Security Measures:**
-- JWT tokens stored in localStorage (consider httpOnly cookies for enhanced security in future)
-- Automatic token cleanup on 401/403 responses
-- Protected routes with authentication checks
-- CSRF protection via SameSite cookies (backend)
-- Input validation before submission
-- Password strength indicators
-- Rate limit error handling with user-friendly messages
+- `.card`, `.shadow-card`
+- `.h1`, `.h2`, `.text-secondary`
 
 ---
 
 ## Getting Started
 
 ### Prerequisites
-- Node.js 18+ 
-- Backend API running (see [game-tracker-server](https://github.com/gysagsohn/game-tracker-server))
+- Node.js 18+
+- Backend API running (see [keeptrack.online-server](https://github.com/gysagsohn/keeptrack.online-server))
 
 ### Installation
 
 1. **Clone the repository**
 ```bash
-git clone git@github.com:gysagsohn/game-tracker-client.git
-cd game-tracker-client
+git clone git@github.com:gysagsohn/keeptrack.online-client.git
+cd keeptrack.online-client
 ```
 
 2. **Install dependencies**
@@ -401,15 +274,6 @@ npm run lint     # Run ESLint for code quality checks
 
 ---
 
-## Environment Variables
-
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `VITE_API_URL` | Backend API base URL | `http://localhost:3001` or `https://your-api.com` |
-
-
----
-
 ## Deployment
 
 ### Netlify Configuration
@@ -417,202 +281,85 @@ npm run lint     # Run ESLint for code quality checks
 **Build Settings:**
 - Build command: `npm run build`
 - Publish directory: `dist`
-- Node version: 18 (or higher)
+- Node version: 18+
 
 **Environment Variables:**
 Add `VITE_API_URL` in Netlify dashboard → Site settings → Environment variables
 
-**Redirects:**
-The `public/_redirects` file handles SPA routing:
+**Redirects** (`public/_redirects`):
 ```
 /oauth-success  /index.html  200
 /*              /index.html  200
 ```
 
-**Custom 404:**
-The `public/404.html` file provides a branded 404 page with navigation links.
+---
 
-### Manual Deployment Steps
+## Architecture
 
-1. Build the application:
-```bash
-npm run build
-```
+### State Management
 
-2. Test the build locally:
-```bash
-npm run preview
-```
+**AuthContext** — manages user authentication state, provides `login()`, `signup()`, `logout()`, `setToken()`, `setUser()`. Automatically hydrates from token on load and handles token expiry.
 
-3. Deploy `dist/` folder to Netlify (via dashboard or CLI)
+**ToastContext** — global toast system. Provides `toast.success()`, `toast.error()`, `toast.info()`, `toast.loading()`. Auto-dismisses, limits to 6 simultaneous toasts.
 
-4. Configure environment variables in Netlify dashboard
+### API Client
 
-5. Verify deployment at your Netlify URL
+Axios instance with:
+- Automatic JWT injection on every request
+- Automatic logout + redirect on 401
+- User-friendly messages for 429 rate limit responses
 
 ---
 
-## Browser Support
+## Known Limitations & Future Improvements
 
-- Chrome (latest)
-- Firefox (latest)
-- Safari (latest)
-- Edge (latest)
-- Mobile browsers (iOS Safari, Chrome Android)
-
----
-
-## Key Dependencies
-
-**Production:**
-- `react` & `react-dom` (19.1.0) - UI framework
-- `react-router-dom` (7.8.0) - Routing
-- `axios` (1.11.0) - HTTP client
-- `@tailwindcss/vite` (4.1.11) - Styling
-- `react-icons` (5.5.0) - Icon library
-- `react-day-picker` (9.9.0) - Date picker
-- `date-fns` (4.1.0) - Date utilities
-
-**Development:**
-- `vite` (7.0.0) - Build tool
-- `eslint` (9.29.0) - Linting
-- `@vitejs/plugin-react` (4.5.2) - Vite React plugin
-- `tailwindcss` (4.1.11) - CSS framework
-
----
-
-## Code Quality
-
-### ESLint Configuration
-- React Hooks linting enabled
-- No unused variables (except uppercase constants)
-- React Refresh rules for HMR
-
-### Best Practices Followed
-- Component-based architecture with single responsibility
-- Custom hooks for reusable logic (`useAuth`, `useToast`, `useFormValidation`)
-- Context API for global state management
-- Error boundaries for graceful error handling
-- Loading states with skeleton components
-- Proper form validation with user feedback
-- Accessible form labels and ARIA attributes
-- Responsive design with mobile-first approach
-- Centralized API client configuration
-- Token storage abstraction (`tokenStorage.js`)
-
----
-
-## Known Issues & Limitations
-
-### Current Limitations
 - No real-time updates (requires page refresh for new data)
-- No offline support (requires internet connection)
-- Token stored in localStorage (future: httpOnly cookies for enhanced security)
-- No automatic token refresh (tokens expire after 7 days)
-- Rate limiting handled by backend (no client-side retry logic)
-
-### Future Improvements
-- WebSocket integration for real-time notifications
-- Service worker for offline support and PWA capabilities
-- Refresh token mechanism (access token + refresh token pattern)
-- Enhanced keyboard navigation and accessibility (WCAG 2.1 AA compliance)
-- Comprehensive test coverage (unit + integration + E2E with Vitest/Playwright)
-- Code splitting for improved initial load time
-- React.memo optimization to prevent unnecessary re-renders
-- Optimistic UI updates for better perceived performance
-- Client-side caching with React Query or SWR
-- Image optimization and lazy loading
-
----
-
-## Contributing
-
-This is a portfolio project, but feedback and suggestions are welcome:
-1. Open an issue for bugs or feature requests
-2. Fork the repository
-3. Create a feature branch (`git checkout -b feature/amazing-feature`)
-4. Commit your changes (`git commit -m 'Add amazing feature'`)
-5. Push to the branch (`git push origin feature/amazing-feature`)
-6. Submit a pull request with clear description
-
----
-
-## Related Projects
-
-- **Backend:** [game-tracker-server](https://github.com/gysagsohn/game-tracker-server) - Express + MongoDB API with enterprise-grade security
-- **Live Application:** [https://gy-gametracker.netlify.app](https://gy-gametracker.netlify.app)
+- Token stored in localStorage (future: httpOnly cookies)
+- No automatic token refresh
+- Pagination for matches and notifications (planned)
+- WebSocket integration for real-time notifications (planned)
+- PWA / offline support (planned)
+- Comprehensive test coverage with Vitest/Playwright (planned)
 
 ---
 
 ## Author
 
-**Gy Sohn**  
-Full-Stack Developer  
+**Gy Sohn**
+Full-Stack Developer
 [LinkedIn](https://www.linkedin.com/in/gysohn) | [GitHub](https://github.com/gysagsohn) | [Portfolio](https://gysohn.com)
-
-Built as a portfolio project to demonstrate:
-- Full-stack MERN development
-- Production-ready deployment (Netlify + Render)
-- Modern React patterns with hooks and context
-- Responsive UI/UX design with Tailwind CSS
-- RESTful API integration
-- Secure authentication flows (JWT + OAuth)
-- Real-world feature implementation
-- Integration with enterprise-grade backend security
 
 ---
 
 ## License
 
-This project is open source and available for educational purposes.
+Open source and available for educational purposes.
 
 ---
 
 ## Recent Updates
 
 ### Version 2.0 - Security & UX Enhancements (February 2026)
-
-**Backend Security Integration:**
-- **Password reset auto-login** - Seamless UX after successful password reset
-- **Enhanced token management** - Exposed `setToken` and `setUser` in AuthContext
-- **Rate limit error handling** - User-friendly messages for 429 responses
-- **Improved 401 handling** - Automatic logout and redirect on token expiry
-- **Better error messages** - Backend security checks surfaced to users
-
-**Frontend Improvements:**
-- **Auto-login flow** - After password reset, users automatically logged in
-- **Token storage utility** - Centralized `tokenStorage.js` for consistency
-- **Enhanced AuthProvider** - Manual token/user updates now supported
-- **Toast notifications** - Security events (rate limits, token expiry) clearly communicated
-- **Better loading states** - During authentication flows
-- **Error boundaries** - Graceful handling of API failures
-- **Match decline functionality** - Users can now decline match invitations
-
-**Code Quality:**
-- Refactored authentication flow for better maintainability
-- Consistent error handling across all API calls
-- Improved component organization
-- Enhanced inline documentation
-
----
+- Password reset auto-login — seamless UX after successful reset
+- Enhanced token management via centralized `tokenStorage.js`
+- Rate limit error handling with user-friendly messages
+- Improved 401 handling — automatic logout and redirect
+- Match decline functionality — users can decline match invitations
+- Edit match — any player in the match can edit details
+- ActivityLog updates correctly after match edits
+- Matches list re-fetches on navigation back from match detail
 
 ### Version 1.2 - UX & Performance (January 2026)
-- Added skeleton loading states across all pages
-- Implemented error boundary for graceful crash handling
-- Enhanced toast notification system with better positioning
-- Redesigned sidebar navigation with modern card layout and icons
-- Added real-time notification badges on mobile and desktop nav
-- Improved Friends page layout with centered, responsive design
-- Created reusable LogoutButton component
-- Fixed responsive header alignment on Notifications and Matches pages
-- Comprehensive loading states for better perceived performance
-
----
+- Skeleton loading states across all pages
+- Error boundary for graceful crash handling
+- Enhanced toast notification system
+- Redesigned sidebar navigation
+- Real-time notification badges on nav
+- Improved Friends page layout
 
 ### Version 1.1 - Profile & Security (December 2025)
 - Complete profile page with user statistics
 - Password change functionality
 - Account deletion with confirmation
-- Silent authentication check (no loading flash on page load)
+- Silent authentication check
 - Improved form validation
-- Better mobile responsiveness
